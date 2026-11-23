@@ -65,6 +65,7 @@ Progress and display preferences are stored in the learner's browser. They do no
 | Change colors and fonts | Select a preset or add a CSS theme, including light and dark variants. [Theme guide](docs/authoring.md#6-customize-the-theme-or-add-a-renderer) |
 | Add diagrams or navigation behavior | Supply trusted browser extensions with custom diagram renderers or an `onNavigate` hook. [Extension guide](docs/authoring.md#6-customize-the-theme-or-add-a-renderer) |
 | Add course-specific fields | Add `data` to chapters, lessons, and steps, and validate it with a course schema. [Data guide](docs/authoring.md#extend-content-and-the-shell) |
+| Add optional analytics | Set build environment variables for Google Analytics, Umami, or Plausible. [Publishing guide](docs/publishing.md#add-analytics-to-the-default-site) |
 | Change the generated site | Use a build customization callback or provide a full build shell. [Build guide](docs/authoring.md#share-the-build-and-preview) |
 | Use an existing interface | Adapt the browser shell, or import the compiler and diagram renderer separately. [Integration guide](docs/authoring.md#import-parts-into-an-existing-app) |
 

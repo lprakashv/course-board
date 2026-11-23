@@ -17,7 +17,47 @@ export async function copyBrowserShell(directory) {
   }
 }
 
-async function stageDefaultSite({ root, site, course }, files) {
+function analyticsMarkup(settings) {
+  const { GOOGLE_TAG_ID: google = '', UMAMI_WEBSITE_ID: umami = '',
+    UMAMI_SCRIPT_URL: umamiUrl = '', PLAUSIBLE_SCRIPT_URL: plausible = '' } = settings;
+  const scripts = [];
+  const scriptUrl = (value, name) => {
+    let url;
+    try { url = new URL(value); } catch { throw new Error(`${name} must be an HTTPS URL.`); }
+    if (url.protocol !== 'https:' || url.username || url.password) throw new Error(`${name} must be an HTTPS URL.`);
+    return escapeHtml(url.href);
+  };
+  if (google) {
+    if (!/^G-[A-Z0-9]+$/i.test(google)) throw new Error('GOOGLE_TAG_ID must be a GA4 measurement ID.');
+    scripts.push(`<script async src="https://www.googletagmanager.com/gtag/js?id=${google}"></script>
+  <script>
+    window.dataLayer = window.dataLayer || [];
+    function gtag() { dataLayer.push(arguments); }
+    gtag('js', new Date());
+    gtag('config', '${google}');
+    window.addEventListener('hashchange', () => gtag('event', 'page_view', { page_location: location.href }));
+  </script>`);
+  }
+  if (umami) {
+    if (!/^[0-9a-f]{8}-(?:[0-9a-f]{4}-){3}[0-9a-f]{12}$/i.test(umami)) {
+      throw new Error('UMAMI_WEBSITE_ID must be a UUID.');
+    }
+    scripts.push(`<script defer src="${scriptUrl(umamiUrl || 'https://cloud.umami.is/script.js', 'UMAMI_SCRIPT_URL')}" data-website-id="${umami}"></script>`);
+  } else if (umamiUrl) {
+    throw new Error('UMAMI_SCRIPT_URL requires UMAMI_WEBSITE_ID.');
+  }
+  if (plausible) {
+    scripts.push(`<script defer src="${scriptUrl(plausible, 'PLAUSIBLE_SCRIPT_URL')}"></script>
+  <script>
+    window.plausible = window.plausible || function() { (window.plausible.q = window.plausible.q || []).push(arguments); };
+    window.plausible.init = window.plausible.init || function(options) { window.plausible.o = options || {}; };
+    window.plausible.init({ hashBasedRouting: true });
+  </script>`);
+  }
+  return scripts.join('\n  ');
+}
+
+async function stageDefaultSite({ root, site, course }, files, analytics) {
   const browser = join(site, '_board');
   await copyBrowserShell(browser);
   const template = await readFile(new URL('./browser/index.html', import.meta.url), 'utf8');
@@ -25,7 +65,8 @@ async function stageDefaultSite({ root, site, course }, files) {
     ? `<link rel="stylesheet" href="${escapeHtml(assetUrl(course.theme))}">` : '';
   const attributes = `data-course-id="${escapeHtml(course.id)}" data-theme="${escapeHtml(course.preset ?? 'classic')}"`;
   const index = template.replace('data-course-attributes', `${attributes}${course.theme ? ' data-custom-theme' : ''}`)
-    .replace('<!-- Custom theme -->', themeLink);
+    .replace('<!-- Custom theme -->', themeLink)
+    .replace('<!-- Analytics -->', analyticsMarkup(analytics));
   await writeFile(join(site, 'index.html'), index);
   for (const file of ['course.css', 'favicon.svg']) {
     await copyFile(new URL(`./browser/${file}`, import.meta.url), join(browser, file));
@@ -49,7 +90,8 @@ async function stageDefaultSite({ root, site, course }, files) {
   await writeFile(join(site, '.nojekyll'), '');
 }
 
-export async function buildSite(directory = '.', { shell, customize } = {}) {
+export async function buildSite(directory = '.', { shell, customize, analytics = process.env } = {}) {
+  if (!analytics || typeof analytics !== 'object' || Array.isArray(analytics)) throw new TypeError('analytics must be an object.');
   if (customize !== undefined && typeof customize !== 'function') throw new TypeError('customize must be a function.');
   if (shell && customize) throw new Error('Choose either shell or customize.');
   const root = resolve(directory);
@@ -65,7 +107,7 @@ export async function buildSite(directory = '.', { shell, customize } = {}) {
     if (shell) {
       await shell(context);
     } else {
-      await stageDefaultSite(context, files);
+      await stageDefaultSite(context, files, analytics);
       if (customize) await customize(context);
     }
     let hasBackup = false;
