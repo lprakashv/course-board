@@ -8,9 +8,9 @@ Build a static course from Markdown. Import a course bundle from the CLI or use 
 
 ## Preview
 
-The example course shows lessons, step navigation, and a whiteboard. CI refreshes this screenshot along with the course showcase after the first successful showcase run.
+The example course shows lessons, step navigation, and a whiteboard. Select the screenshot to see the latest example build that CI captured.
 
-![Course Board example](https://raw.githubusercontent.com/lprakashv/course-board/showcase-images/course-board.png)
+[![Course Board example](docs/course-board.png)](https://raw.githubusercontent.com/lprakashv/course-board/showcase-images/course-board.png)
 
 ## Courses built with Course Board
 
@@ -53,7 +53,7 @@ To create a separate course, follow the [authoring guide](docs/authoring.md). It
 | Authors | Markdown lessons with ordered chapters and steps; JSON Schema validation; CLI import; local Studio editor; code snippets and stable step IDs |
 | Whiteboards | ASCII, images, SVG, Excalidraw, sandboxed HTML, and custom diagrams; optional captions and example-state changes |
 | Learners | Lesson search, step links, previous and next navigation, arrow-key navigation, completion tracking, and a responsive layout |
-| Display | Classic, Slate, and Night presets; reader-selected light and dark modes; resizable desktop panes; reduced-motion support |
+| Display | Classic, Slate, and Night presets with light blue accents; reader-selected light and dark modes; resizable desktop panes; reduced-motion support |
 | Developers | Static builds, local preview, Node compiler and build APIs, browser renderer and shell exports, and GitHub Pages deployment |
 
 Progress and display preferences are stored in the learner's browser. They do not sync across devices.
