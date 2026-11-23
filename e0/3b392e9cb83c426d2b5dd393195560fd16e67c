@@ -1,0 +1,25 @@
+README.md
+  s_682906205edf86::t_89f97b440627b8 5,28,30,37,39-69,83,86
+docs/authoring.md
+  s_682906205edf86::t_b2a607cece1d32 59,155
+docs/publishing.md
+  s_682906205edf86::t_db3a75caa9daa1 3
+docs/studio.md
+  s_682906205edf86::t_c7d6aaa12e6976 1-48
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.7.5",
+  "base_commit_sha": "e03b392e9cb83c426d2b5dd393195560fd16e67c",
+  "prompts": {},
+  "sessions": {
+    "s_682906205edf86": {
+      "agent_id": {
+        "tool": "codex",
+        "id": "01a20927-2beb-7f03-b0f2-9554efacce1c",
+        "model": "gpt-6.1-terra"
+      },
+      "human_author": "Lalit Vatsal <lprakashv@gmail.com>"
+    }
+  }
+}
