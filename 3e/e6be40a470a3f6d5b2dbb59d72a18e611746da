@@ -1,0 +1,37 @@
+docs/migrations.md
+  s_5b64bd2b522060::t_23571063bdcf81 133-139
+test/course.test.js
+  s_5b64bd2b522060::t_7363a7b39f9b44 33
+src/build.js
+  s_5b64bd2b522060::t_5ec9988e4a3ce1 14
+package.json
+  s_5b64bd2b522060::t_5ec9988e4a3ce1 19
+src/browser/app.js
+  s_5b64bd2b522060::t_5ec9988e4a3ce1 1-2,15,78,87
+src/browser/browser-config.js
+  s_5b64bd2b522060::t_5ec9988e4a3ce1 1-37
+docs/authoring.md
+  s_5b64bd2b522060::t_23571063bdcf81 225-243
+test/browser-config.test.js
+  s_5b64bd2b522060::t_7363a7b39f9b44 1-74
+README.md
+  s_5b64bd2b522060::t_23571063bdcf81 56
+test/shell.test.js
+  s_5b64bd2b522060::t_7363a7b39f9b44 38
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.7.5",
+  "base_commit_sha": "3ee6be40a470a3f6d5b2dbb59d72a18e611746da",
+  "prompts": {},
+  "sessions": {
+    "s_5b64bd2b522060": {
+      "agent_id": {
+        "tool": "codex",
+        "id": "01a20800-903c-7123-8725-0038a492723f",
+        "model": "gpt-6.2-sol"
+      },
+      "human_author": "Lalit Vatsal <lprakashv@gmail.com>"
+    }
+  }
+}
