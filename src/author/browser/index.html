@@ -1,0 +1,44 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Course Board Studio</title>
+  <link rel="icon" href="/favicon.svg" type="image/svg+xml">
+  <link rel="stylesheet" href="/studio.css">
+  <link rel="stylesheet" href="/studio/board.css">
+  <script type="module" src="/studio/app.js"></script>
+</head>
+<body>
+  <header class="topbar">
+    <a class="skip" href="#workspace">Skip to editor</a>
+    <div class="brand"><img src="/favicon.svg" alt="" width="30" height="30"> Course Board <span>Studio</span></div>
+    <div class="save-bar">
+      <span id="save-state" role="status">Opening course…</span>
+      <button id="save" class="primary" type="button" disabled>Save course</button>
+    </div>
+  </header>
+  <div class="studio-layout" id="studio" inert>
+    <aside class="sidebar">
+      <button class="settings" type="button" data-action="settings">Course settings</button>
+      <div class="outline-head"><h2>Outline</h2><button type="button" data-action="add-chapter">+ Chapter</button></div>
+      <nav id="outline" aria-label="Chapters and lessons"></nav>
+    </aside>
+    <main id="workspace" tabindex="-1"></main>
+  </div>
+  <p id="error" class="error" role="alert" hidden></p>
+  <dialog id="board-dialog" aria-labelledby="board-title">
+    <header class="board-toolbar">
+      <h2 id="board-title">Excalidraw whiteboard</h2>
+      <div class="actions">
+        <label class="button file-button" for="scene-file">Import scene<input id="scene-file" type="file" accept=".excalidraw" disabled></label>
+        <button id="close-board" type="button">Close</button>
+        <button id="apply-board" class="primary" type="button" disabled>Apply board</button>
+      </div>
+    </header>
+    <p id="board-status" role="status" hidden></p>
+    <div id="drawing"></div>
+  </dialog>
+  <noscript>Enable JavaScript to use Course Board Studio.</noscript>
+</body>
+</html>

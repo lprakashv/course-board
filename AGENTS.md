@@ -14,6 +14,7 @@ Define user-visible changes in the owning guide, schema, or example before you c
 | [`src/content.js`](src/content.js) | Parse Markdown and YAML, validate input, and compile the course model |
 | [`src/build.js`](src/build.js) | Build the static site and copy the standalone renderer for an existing app |
 | [`src/cli.js`](src/cli.js), [`src/serve.js`](src/serve.js) | Command entry points and local preview |
+| [`src/author/`](src/author/) | Validated source writes, CLI import, and the local Studio server |
 | [`src/index.js`](src/index.js), [`package.json`](package.json) | Public Node exports, browser export, and package contents |
 | [`src/browser/`](src/browser/) | Browser shell, navigation, styles, and diagram rendering |
 | [`example/`](example/), [`test/`](test/) | A working course and regression tests |
@@ -39,6 +40,8 @@ npm pack --dry-run
 ```
 
 Run `npm run dev` to preview edits in the sample course. Run `npm run run` after a build to serve the generated output. See the [README](README.md) for the preview addresses.
+
+Run `npm run author` to edit the sample in Studio. Keep Studio routes, bundles, and editor dependencies out of the static course output.
 
 Add a focused regression test when the current tests cannot catch a break. Cover the normal use case and relevant invalid input. For browser changes, check narrow and wide screens, keyboard navigation, focus, and a direct step link. For package changes, inspect the archive and install it in a scratch project. State the checks that ran and any behavior you could not verify.
 

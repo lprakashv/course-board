@@ -1,0 +1,28 @@
+{
+  "$schema": "../../schemas/ingest.json",
+  "manifest": {
+    "version": 1,
+    "id": "cache-notes",
+    "title": "Cache Notes",
+    "preset": "slate",
+    "chapters": [{ "title": "Read paths", "lessons": ["cache-hit"] }]
+  },
+  "lessons": [
+    {
+      "id": "cache-hit",
+      "title": "Return a Cache Hit",
+      "steps": [
+        {
+          "title": "Look up the key",
+          "text": "Use the product ID to form a cache key. If the cache has a valid value, return it.",
+          "diagram": {
+            "type": "svg",
+            "src": "diagrams/cache-check.svg",
+            "alt": "The service looks up a product in the cache."
+          }
+        }
+      ]
+    }
+  ],
+  "assets": { "diagrams/cache-check.svg": "../public/diagrams/cache-check.svg" }
+}

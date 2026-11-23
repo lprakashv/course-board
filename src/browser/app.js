@@ -14,6 +14,7 @@ try {
   const response = await fetch('./course.json');
   if (!response.ok) throw new Error('Could not read course.json.');
   const course = await response.json();
+  if (course.preset) document.documentElement.dataset.theme = course.preset;
   const extension = course.extension ? await import(`../${assetUrl(course.extension)}`) : {};
   if (course.theme) {
     const link = document.createElement('link');

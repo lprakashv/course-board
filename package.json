@@ -17,6 +17,7 @@
   "exports": {
     ".": "./src/index.js",
     "./diagrams": "./src/browser/diagrams.js",
+    "./schemas/ingest.json": "./schemas/ingest.json",
     "./schemas/manifest.json": "./schemas/manifest.json",
     "./schemas/lesson.json": "./schemas/lesson.json",
     "./schemas/step.json": "./schemas/step.json",
@@ -26,10 +27,12 @@
     "src",
     "schemas",
     "example/content",
+    "example/ingest",
     "example/public",
     "docs"
   ],
   "scripts": {
+    "author": "node src/cli.js author example",
     "dev": "node src/cli.js dev example",
     "run": "node src/cli.js preview example",
     "build": "node src/cli.js build example",
@@ -41,5 +44,17 @@
     "ajv": "8.20.0",
     "markdown-it": "15.0.3",
     "yaml": "2.9.0"
+  },
+  "devDependencies": {
+    "@excalidraw/excalidraw": "0.18.1",
+    "esbuild": "0.28.2",
+    "react": "18.3.1",
+    "react-dom": "18.3.1"
+  },
+  "overrides": {
+    "@excalidraw/excalidraw": { "nanoid": "3.3.20" },
+    "@excalidraw/mermaid-to-excalidraw": { "nanoid": "5.1.16" },
+    "katex": "0.18.2",
+    "lodash-es": "4.18.1"
   }
 }

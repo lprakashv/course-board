@@ -5,7 +5,7 @@ import MarkdownIt from 'markdown-it';
 import { parseDocument } from 'yaml';
 import { isAssetPath } from './browser/diagrams.js';
 
-async function loadSchema(name) {
+export async function loadSchema(name) {
   const url = new URL(`../schemas/${name}.json`, import.meta.url);
   return JSON.parse(await readFile(url, 'utf8'));
 }
@@ -16,7 +16,7 @@ const lessonSchema = ajv.compile(await loadSchema('lesson'));
 const stepSchema = ajv.compile(await loadSchema('step'));
 const markdown = new MarkdownIt({ html: false });
 
-function validate(schema, value, location) {
+export function validate(schema, value, location) {
   if (schema(value)) return;
   const details = schema.errors.map(error => {
     const property = error.params.additionalProperty ?? error.params.propertyName;
@@ -73,7 +73,7 @@ export function parseLesson(source, id) {
   return { id, ...metadata, steps };
 }
 
-async function publicFiles(directory) {
+export async function publicFiles(directory) {
   let entries;
   try {
     const info = await lstat(directory);
@@ -97,7 +97,7 @@ function requireAsset(path, files, location) {
   if (!files.has(path)) throw new Error(`${location}: asset "${path}" must be a file in public/`);
 }
 
-export async function readProject(directory = '.') {
+export async function readProject(directory = '.', { includeSources = false } = {}) {
   const root = resolve(directory);
   const manifestPath = join(root, 'content/course.json');
   const input = await readFile(manifestPath, 'utf8');
@@ -116,6 +116,7 @@ export async function readProject(directory = '.') {
   }
 
   const ids = new Set();
+  const sources = includeSources ? new Map() : undefined;
   const chapters = [];
   for (const chapter of manifest.chapters) {
     const lessons = [];
@@ -123,6 +124,7 @@ export async function readProject(directory = '.') {
       if (ids.has(id)) throw new Error(`${manifestPath}: duplicate lesson ID "${id}"`);
       ids.add(id);
       const source = await readFile(join(root, 'content', 'lessons', `${id}.md`), 'utf8');
+      sources?.set(id, source);
       const lesson = parseLesson(source, id);
       for (const [index, step] of lesson.steps.entries()) {
         const diagram = step.diagram;
@@ -153,7 +155,7 @@ export async function readProject(directory = '.') {
   }
 
   const { $schema, ...course } = manifest;
-  return { course: { ...course, chapters }, files };
+  return { course: { ...course, chapters }, files, manifest, sources };
 }
 
 export async function compileCourse(directory = '.') {

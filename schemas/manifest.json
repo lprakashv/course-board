@@ -25,6 +25,9 @@
     "description": {
       "$ref": "#/definitions/text"
     },
+    "preset": {
+      "enum": ["classic", "slate", "night"]
+    },
     "theme": {
       "type": "string",
       "pattern": "\\.css$"

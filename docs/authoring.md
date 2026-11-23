@@ -37,6 +37,39 @@ Change the optional `$schema` in `content/course.json` to `../node_modules/@lpra
 
 Run `npm run dev` and open [the development preview](http://127.0.0.1:4173/). Save a file and reload the page to rebuild it. Press Ctrl+C to stop the server.
 
+## Import a course from the CLI
+
+Put the course outline, lessons, and file mappings in a JSON bundle. See the [import schema](../schemas/ingest.json) and the [example bundle](../example/ingest/course.json).
+
+```sh
+npm exec -- course-board ingest course-bundle.json my-course
+npm exec -- course-board check my-course
+npm exec -- course-board dev my-course
+```
+
+- `manifest` uses the same format as `content/course.json`. It lists chapter titles and lesson IDs in order.
+- `lessons` contains one object per listed ID. Each lesson has a `title` and `steps`, and can have `summary` and `data`. Each step has a `title` and Markdown `text`, and can have `diagram` and `data`. Use `###` or lower for headings inside step text.
+- `assets` maps a path in the course's `public/` directory to a file path relative to the bundle. Use the destination path in a diagram, theme, or extension. For an Excalidraw board, map the SVG export as `src` and the optional `.excalidraw` file as `source`.
+
+The import creates `content/course.json`, `content/lessons/<id>.md`, and any mapped `public/` files. Use `.` as the target to import into the current directory. The bundle supplies the full course outline. A repeat import updates listed lessons and mapped assets. Unlisted files stay on disk. The compiler checks the result before the import replaces course files.
+
+## Edit a course in the browser
+
+Run these commands from a Course Board source checkout. Pass the path to your course directory.
+
+```sh
+npm ci
+node src/cli.js author /path/to/my-course
+```
+
+Open [Course Board Studio](http://127.0.0.1:4175/). You can also open a new directory to start a course. Add at least one chapter, lesson, and step, then select **Save course**. Use the course preview on port 4173 to read the saved course. Set `PORT` before the `author` command to use a different Studio port.
+
+- Use the outline to add and edit chapters and lessons. Use Markdown for step text and the step order controls to set the reading order.
+- Attach an image, SVG, or standalone HTML board to a step, or select **Open whiteboard** to draw with Excalidraw. In the editor, select **Import scene** to open a `.excalidraw` file. Use **Apply board** to prepare the scene and its SVG export. Save the course to write both files into `public/diagrams/`.
+- Use **Course settings** to select a built-in style or attach a CSS file. Studio saves uploaded files under `public/`. A saved file is available in the static build.
+
+The editor runs on the local machine and saves to the directory you pass to `author`. Keep the browser tab open until you save. If another author or CLI command changes the course while it is open, reload Studio before you save again. The reader preview and production build use the saved files.
+
 ## 3. Set the course and chapter order
 
 Edit `content/course.json`. The chapter list and its lesson ID lists set the order.
@@ -101,11 +134,20 @@ Put diagram files in `public/`. Use paths relative to that directory in `src` an
 | `html` | `src` pointing to an HTML document | HTML and CSS in a sandboxed frame with scripts disabled |
 | `custom` | `name` and optional `data` | The HTML that a course extension returns |
 
-For Excalidraw, draw the diagram, save the scene, and export an SVG. Store both files together if you want learners to download the source. Re-export the SVG each time you edit the scene. Course Board displays the SVG. It checks the scene's JSON structure and leaves editing to Excalidraw. [Excalidraw export docs](https://docs.excalidraw.com/docs/@excalidraw/excalidraw/api/utils/export)
+Studio saves the scene and exports the SVG when you apply a board. If you edit a scene outside Studio, export a new SVG when you save it. Course Board displays the SVG and offers the scene as a download when `source` is set. [Excalidraw export docs](https://docs.excalidraw.com/docs/@excalidraw/excalidraw/api/utils/export)
 
 ## 6. Customize the theme or add a renderer
 
-Set `"theme": "theme.css"` in the manifest and create `public/theme.css`. Change the [CSS properties](../src/browser/course.css) for colors and fonts. Set `"extension": "extensions.js"` to add browser code. Use this file for custom HTML elements or diagram markup.
+Set `"preset": "slate"` or `"preset": "night"` in the manifest to select a built-in style. The default is `classic`. Set `"theme": "theme.css"` and create `public/theme.css` to apply your own styles on top of the preset. Use `:root` to set the [CSS properties](../src/browser/course.css) for colors and fonts.
+
+```css
+:root {
+  --accent: #285c4a;
+  --heading-font: Georgia, serif;
+}
+```
+
+Set `"extension": "extensions.js"` to add browser code. Use this file for custom HTML elements or diagram markup.
 
 ```js
 // public/extensions.js

@@ -1,6 +1,6 @@
 # <img src="src/browser/favicon.svg" alt="" width="36" height="36"> Course Board
 
-Build a static course from Markdown. Put content in chapters, divide each lesson into steps, and add a whiteboard where it helps the learner. Course Board provides lesson search, direct step links, keyboard navigation, and progress saved in the browser.
+Build a static course from Markdown. Import a course bundle from the CLI or use Course Board Studio to write lessons and draw whiteboards with Excalidraw. Learners get lesson search, direct step links, keyboard navigation, and progress saved in the browser.
 
 [👀 Preview](#preview) · [🚀 Try the example](#try-the-example) · [📚 Read the guides](#use-course-board-in-a-project)
 
@@ -36,6 +36,8 @@ npm run dev
 
 Open [the development preview](http://127.0.0.1:4173/). Edit a file in `example/content/` or `example/public/` and reload the page. Press Ctrl+C to stop the server.
 
+In a second terminal, run `npm run author` and open [Course Board Studio](http://127.0.0.1:4175/). Edit the example course, then select **Save course** to write the changes to its source files. To start a separate course, run `node src/cli.js author my-course`. To try the CLI import, run `node src/cli.js ingest example/ingest/course.json my-course`. [Authoring guide](docs/authoring.md).
+
 ## Build and check
 
 ```sh
@@ -64,6 +66,7 @@ A new course can use the full site builder. An existing interface can use the de
 | --- | --- |
 | [`schemas/`](schemas/) | JSON Schema contracts for the manifest and lesson metadata |
 | [`src/content.js`](src/content.js) | Markdown compiler and asset validation |
+| [`src/author/`](src/author/) | CLI import and local Course Board Studio |
 | [`src/browser/`](src/browser/) | Static site and standalone diagram renderer |
 | [`example/`](example/) | Sample course with six diagram formats |
 | [`test/`](test/) | Compiler, renderer, navigation, and build tests |
