@@ -1,0 +1,56 @@
+test/shell.test.js
+  s_4816fc2f5350ba::t_8e1e8870b33bf3 38
+example/content/lessons/read-through-a-cache.md
+  s_4816fc2f5350ba::t_2fb8f06de253e0 26-33,49-56,70-77
+src/content.js
+  s_4816fc2f5350ba::t_93f766e930bdf9 73-75,78-84
+src/browser/app.js
+  s_4816fc2f5350ba::t_2225de0ac14b63 3,23-24,27-29,35-46,48-63,66-68,99-130,166-171,182-183,185-194,197-204,206-208,210-211,215,227,244,251
+  s_4816fc2f5350ba::t_93f766e930bdf9 47,64-65,69,131-152,154-165,184,205,209
+  s_4816fc2f5350ba::t_839567a004a77e 153
+docs/authoring.md
+  s_4816fc2f5350ba::t_83d1ab15b6061e 175
+  s_4816fc2f5350ba::t_6df31cff9aaf34 176,182-185,203
+  s_4816fc2f5350ba::t_2fb8f06de253e0 126-140
+  s_4816fc2f5350ba::t_780a26db59214a 204
+docs/migrations.md
+  s_4816fc2f5350ba::t_2fb8f06de253e0 5
+  s_4816fc2f5350ba::t_6df31cff9aaf34 6
+src/build.js
+  s_4816fc2f5350ba::t_a1f1bb04a3eba6 1,3,15,23-29
+src/browser/panes.js
+  s_4816fc2f5350ba::t_a1f1bb04a3eba6 1-65
+src/browser/course.css
+  s_4816fc2f5350ba::t_93f766e930bdf9 211-212,214-224,226-227,229-237
+  s_4816fc2f5350ba::t_839567a004a77e 228
+  s_4816fc2f5350ba::t_aaaea067d56667 1-2,26-30,37,48-49,70,72,94-122,129,134,139-140,144-145,152-153,161,164,175-177,181-187,190-202,209-210,242,244,248-250,252-254,264-266,273-274,278-279
+  s_4816fc2f5350ba::t_22909e279b24ed 213,225
+  s_4816fc2f5350ba::t_83d1ab15b6061e 178-179
+README.md
+  s_4816fc2f5350ba::t_1217cf63cb7d22 17
+  s_4816fc2f5350ba::t_2fb8f06de253e0 3
+src/browser/index.html
+  s_4816fc2f5350ba::t_83d1ab15b6061e 58,62-68
+  s_4816fc2f5350ba::t_a1f1bb04a3eba6 2,7-28,31,54-55
+test/course.test.js
+  s_4816fc2f5350ba::t_8e1e8870b33bf3 33-34,53-64
+  s_4816fc2f5350ba::t_22909e279b24ed 37,104-113
+  s_4816fc2f5350ba::t_dc18e5db3ac0a3 65-66
+  s_4816fc2f5350ba::t_db5e7674d11780 114-115
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.7.5",
+  "base_commit_sha": "786f37708bf4233382eaabe0ca1ac0c3dc42e7e1",
+  "prompts": {},
+  "sessions": {
+    "s_4816fc2f5350ba": {
+      "agent_id": {
+        "tool": "codex",
+        "id": "01a208dd-67eb-7ca1-9f5d-10a7f5d4b127",
+        "model": "gpt-6.2-sol"
+      },
+      "human_author": "Lalit Vatsal <lprakashv@gmail.com>"
+    }
+  }
+}
