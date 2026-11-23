@@ -1,0 +1,30 @@
+src/browser/course.css
+  s_71c2ac7358940c::t_00c2d4ad7fa738 4-17,26-30,58-59,143,190,259
+  s_71c2ac7358940c::t_7e0bf20b912f33 57,63
+src/browser/favicon.svg
+  s_71c2ac7358940c::t_00c2d4ad7fa738 2-3
+docs/authoring.md
+  s_71c2ac7358940c::t_7e0bf20b912f33 159-161,167-169,174
+README.md
+  s_71c2ac7358940c::t_0134a9c918677e 11,13,56
+example/public/theme.css
+  s_71c2ac7358940c::t_00c2d4ad7fa738 1
+docs/publishing.md
+  s_71c2ac7358940c::t_0134a9c918677e 25
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.7.5",
+  "base_commit_sha": "e941c07d4c3b0112808109fc623ea2b1c5489456",
+  "prompts": {},
+  "sessions": {
+    "s_71c2ac7358940c": {
+      "agent_id": {
+        "tool": "codex",
+        "id": "01a20939-4c19-7b50-a2aa-083076bfeb0e",
+        "model": "gpt-6.2-sol"
+      },
+      "human_author": "Lalit Vatsal <lprakashv@gmail.com>"
+    }
+  }
+}
