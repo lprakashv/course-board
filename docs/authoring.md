@@ -7,19 +7,19 @@ Use Node.js 20.19 or later. Create a project with `npm init -y` if it has no `pa
 For local development, use the [package tarball](publishing.md#1-test-the-package-locally). From a new course directory beside the `course-board` directory, run:
 
 ```sh
-npm install --save-dev --save-exact ../course-board/lprakashv-course-board-0.1.2.tgz
+npm install --save-dev --save-exact ../course-board/lprakashv-course-board-0.3.1.tgz
 ```
 
 After the GitHub Release is available, a course can install the versioned asset URL. Use this option when the course's CI can access the release.
 
 ```sh
-npm install --save-dev --save-exact https://github.com/lprakashv/course-board/releases/download/v0.1.2/lprakashv-course-board-0.1.2.tgz
+npm install --save-dev --save-exact https://github.com/lprakashv/course-board/releases/download/v0.3.1/lprakashv-course-board-0.3.1.tgz
 ```
 
 After the package is on npm, install the release instead:
 
 ```sh
-npm install --save-dev --save-exact @lprakashv/course-board@0.1.2
+npm install --save-dev --save-exact @lprakashv/course-board@0.3.1
 ```
 
 ## 2. Add the starter content and scripts
