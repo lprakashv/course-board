@@ -38,7 +38,7 @@ Open [the production preview](http://127.0.0.1:4174/). The build writes to `exam
 - [Adopt it in DSA Blueprint and Designed to Scale](docs/migrations.md)
 - [Browse the example source](example/content/course.json)
 
-A new course can use the full site builder. An existing app can import the content compiler or diagram renderer through the package exports. The existing apps can adopt one part at a time.
+A new course can use the full site builder. An existing interface can use the default shell entry point with a trusted adapter and shared navigation and storage lifecycle. An existing app can import the content compiler or diagram renderer through the package exports. The existing apps can adopt one part at a time.
 
 ## Project map
 

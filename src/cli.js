@@ -1,6 +1,6 @@
 #!/usr/bin/env node
 import { readdir } from 'node:fs/promises';
-import { compileCourse, buildSite, copyDiagramRenderer } from './index.js';
+import { compileCourse, buildSite, copyBrowserShell, copyDiagramRenderer } from './index.js';
 import { serve } from './serve.js';
 
 const usage = `Usage: course-board <command> [path]
@@ -9,7 +9,8 @@ const usage = `Usage: course-board <command> [path]
   build [directory]  Build static files in dist/.
   dev [directory]    Build on page reload (PORT defaults to 4173).
   preview [directory]   Serve dist/ (PORT defaults to 4174).
-  vendor <file>      Copy the diagram renderer for a native ES module site.`;
+  vendor <file>      Copy the diagram renderer for a native ES module site.
+  vendor-shell <directory>  Copy the default shell browser modules.`;
 
 async function main([command, path, ...extra]) {
   if (command === '--help' || command === '-h' || !command) {
@@ -36,6 +37,11 @@ async function main([command, path, ...extra]) {
       await serve(directory, { dev: command === 'dev', port });
       return;
     }
+    case 'vendor-shell':
+      if (!path) throw new Error('Usage: course-board vendor-shell <directory>');
+      await copyBrowserShell(path);
+      console.log(`Copied the browser shell to ${path}`);
+      return;
     case 'vendor':
       if (!path) throw new Error('Usage: course-board vendor <file>');
       await copyDiagramRenderer(path);

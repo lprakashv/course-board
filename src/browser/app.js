@@ -1,6 +1,8 @@
 import { assetUrl, escapeHtml as text, renderDiagram } from './diagrams.js';
 import { getRoute, lessonHref } from './navigation.js';
+import { createCourseShell } from './shell.js';
 
+async function mountDefaultShell() {
 const $ = id => document.getElementById(id);
 const outline = $('outline');
 const toggle = $('outline-toggle');
@@ -23,13 +25,9 @@ try {
   const chapters = course.chapters;
   const lessons = chapters.flatMap(chapter => chapter.lessons.map(lesson => ({ ...lesson, chapter })));
   const storageKey = `course-board:${location.pathname.replace(/index\.html$/, '')}:${course.id}:completed`;
-  let completed = new Set();
-  try {
-    const saved = JSON.parse(localStorage.getItem(storageKey));
-    if (Array.isArray(saved)) completed = new Set(saved);
-  } catch {
-    // The course still works when the browser blocks storage.
-  }
+  const shell = createCourseShell({ storageKey, readRoute: hash => getRoute(hash, lessons) });
+  const saved = shell.readState([]);
+  const completed = new Set(Array.isArray(saved) ? saved : []);
 
   $('course-name').textContent = course.title;
   $('mobile-course-name').textContent = course.title;
@@ -65,7 +63,7 @@ try {
   }
 
   function render() {
-    const { lesson, index, step } = getRoute(location.hash, lessons);
+    const { lesson, index, step } = shell.route();
     const active = lesson.steps[step];
     const previousLesson = lessons[index - 1];
     const nextLesson = lessons[index + 1];
@@ -128,7 +126,7 @@ try {
       if (completed.has(lesson.id)) completed.delete(lesson.id);
       else completed.add(lesson.id);
       const done = completed.has(lesson.id);
-      try { localStorage.setItem(storageKey, JSON.stringify([...completed])); } catch {}
+      shell.writeState([...completed]);
       event.currentTarget.setAttribute('aria-pressed', String(done));
       event.currentTarget.textContent = done ? 'Completed ✓' : 'Mark complete';
       renderOutline(lesson);
@@ -139,7 +137,7 @@ try {
   }
 
   toggle.addEventListener('click', () => setOutline(!outline.classList.contains('is-open')));
-  search.addEventListener('input', () => renderOutline(getRoute(location.hash, lessons).lesson));
+  search.addEventListener('input', () => renderOutline(shell.route().lesson));
   document.querySelector('.skip').addEventListener('click', event => {
     event.preventDefault();
     main.focus();
@@ -164,9 +162,8 @@ try {
     focusStep = true;
     location.hash = link.hash;
   });
-  window.addEventListener('hashchange', render);
   if (!location.hash) history.replaceState(null, '', lessonHref(lessons[0].id));
-  render();
+  shell.start({ render });
 } catch (error) {
   const message = document.createElement('p');
   message.setAttribute('role', 'alert');
@@ -174,3 +171,9 @@ try {
   main.replaceChildren(message);
   main.removeAttribute('aria-busy');
 }
+
+}
+
+const adapter = document.querySelector('script[type="module"][data-course-board-adapter]');
+if (adapter) await import(new URL(adapter.dataset.courseBoardAdapter, import.meta.url));
+else await mountDefaultShell();

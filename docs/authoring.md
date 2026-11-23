@@ -7,19 +7,19 @@ Use Node.js 20.19 or later. Create a project with `npm init -y` if it has no `pa
 For local development, use the [package tarball](publishing.md#1-test-the-package-locally). From a new course directory beside the `course-board` directory, run:
 
 ```sh
-npm install --save-dev --save-exact ../course-board/lprakashv-course-board-0.1.0.tgz
+npm install --save-dev --save-exact ../course-board/lprakashv-course-board-0.1.2.tgz
 ```
 
 After the GitHub Release is available, a course can install the versioned asset URL. Use this option when the course's CI can access the release.
 
 ```sh
-npm install --save-dev --save-exact https://github.com/lprakashv/course-board/releases/download/v0.1.0/lprakashv-course-board-0.1.0.tgz
+npm install --save-dev --save-exact https://github.com/lprakashv/course-board/releases/download/v0.1.2/lprakashv-course-board-0.1.2.tgz
 ```
 
 After the package is on npm, install the release instead:
 
 ```sh
-npm install --save-dev --save-exact @lprakashv/course-board@0.1.0
+npm install --save-dev --save-exact @lprakashv/course-board@0.1.2
 ```
 
 ## 2. Add the starter content and scripts
@@ -168,3 +168,9 @@ await buildSite('.', {
 ```
 
 Write any other assets that the interface needs inside `site`. The build publishes that directory as `dist/`.
+
+## Adapt the default browser shell
+
+The default shell entry point can start a trusted interface adapter. This lets an existing course keep its HTML, styles, routes, and stored settings while using the same shell lifecycle and storage helpers as the default interface. The adapter owns its interface and event handlers; Course Board does not translate them automatically.
+
+Run `course-board vendor-shell site/src/vendor` to copy the default entry point and its browser modules. Load it with `<script type="module" src="./src/vendor/app.js" data-course-board-adapter="../app.js"></script>`. The adapter path is relative to the copied entry point. In the adapter, import `createCourseShell` from `./vendor/shell.js`. Pass `readRoute` and the existing `storageKey`, then call `readState`, `writeState`, and `start({ render, onNavigate })`. `start` renders once and calls `onNavigate` on a hash change; it returns a cleanup function. State remains at the supplied key and storage failures are ignored. The normal Course Board interface still starts when the adapter attribute is absent. The adapter runs as trusted code.

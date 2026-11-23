@@ -16,19 +16,19 @@ npm pack --dry-run
 npm pack
 ```
 
-Check the file list from the dry run. Expect source modules, schemas, example sources, and docs. The pack command creates `lprakashv-course-board-0.1.0.tgz`. Install it in a scratch course with the [authoring guide](authoring.md#1-install-course-board). A relative tarball path works while both projects are on the same machine. For CI, use a published GitHub Release URL, an npm release, or an archive committed inside the course repository. Commit the resulting lockfile. [npm pack documentation](https://docs.npmjs.com/cli/v11/commands/npm-pack/)
+Check the file list from the dry run. Expect source modules, schemas, example sources, and docs. The pack command creates `lprakashv-course-board-0.1.2.tgz`. Install it in a scratch course with the [authoring guide](authoring.md#1-install-course-board). A relative tarball path works while both projects are on the same machine. For CI, use a published GitHub Release URL, an npm release, or an archive committed inside the course repository. Commit the resulting lockfile. [npm pack documentation](https://docs.npmjs.com/cli/v11/commands/npm-pack/)
 
 ## 2. Publish a GitHub Release
 
 The [CI and release workflow](../.github/workflows/ci.yml) checks pull requests and pushes to `main`. A pushed version tag runs the same checks on Node.js 20.19 and 22. If both pass, the workflow packs the tagged source and attaches the `.tgz` to the GitHub Release. A successful push to `main` also captures the sample course and commits a refreshed screenshot to `docs/course-board.png`. The screenshot job needs write access to repository contents. If `main` changes after capture, the job skips that screenshot. The newer push runs its own refresh. The tag must match the stable version in `package.json`.
 
 1. Set the release version in `package.json` and update `package-lock.json` with `npm install --package-lock-only` when the version changes. Run the [local checks](#1-test-the-package-locally). Commit the version and release changes to `main`.
-2. Push the release commit before the tag. In this example, version `0.1.0` is already set. Use the actual release version for both tag commands.
+2. Push the release commit before the tag. In this example, version `0.1.2` is already set. Use the actual release version for both tag commands.
 
    ```sh
    git push origin main
-   git tag -a v0.1.0 -m "Release 0.1.0"
-   git push origin v0.1.0
+   git tag -a v0.1.2 -m "Release 0.1.2"
+   git push origin v0.1.2
    ```
 
 3. In GitHub, check the **Course Board CI and Release** run for the tag. Then open **Releases** and check that the version has the expected `.tgz`. Download the archive and install it in a scratch project as in step 1. If the workflow stops during publishing, check the release and its assets before you retry the job. [GitHub Release CLI reference](https://cli.github.com/manual/gh_release_create)

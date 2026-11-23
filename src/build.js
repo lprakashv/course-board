@@ -8,6 +8,14 @@ export async function copyDiagramRenderer(file) {
   await copyFile(new URL('./browser/diagrams.js', import.meta.url), target);
 }
 
+export async function copyBrowserShell(directory) {
+  const target = resolve(directory);
+  await mkdir(target, { recursive: true });
+  for (const file of ['app.js', 'shell.js', 'navigation.js', 'diagrams.js']) {
+    await copyFile(new URL(`./browser/${file}`, import.meta.url), join(target, file));
+  }
+}
+
 export async function buildSite(directory = '.', { shell } = {}) {
   const root = resolve(directory);
   const { course, files } = await readProject(root);
@@ -22,7 +30,7 @@ export async function buildSite(directory = '.', { shell } = {}) {
       await shell({ root, site, course });
     } else {
       await mkdir(join(site, '_board'), { recursive: true });
-      for (const file of ['index.html', 'app.js', 'navigation.js', 'diagrams.js', 'course.css', 'favicon.svg']) {
+      for (const file of ['index.html', 'app.js', 'shell.js', 'navigation.js', 'diagrams.js', 'course.css', 'favicon.svg']) {
         const target = file === 'index.html' ? join(site, file) : join(site, '_board', file);
         await copyFile(new URL(`./browser/${file}`, import.meta.url), target);
       }

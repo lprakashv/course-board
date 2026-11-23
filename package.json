@@ -1,6 +1,6 @@
 {
   "name": "@lprakashv/course-board",
-  "version": "0.1.1",
+  "version": "0.1.2",
   "description": "Build and publish step-by-step static courses from Markdown.",
   "type": "module",
   "license": "MIT",
@@ -19,7 +19,8 @@
     "./diagrams": "./src/browser/diagrams.js",
     "./schemas/manifest.json": "./schemas/manifest.json",
     "./schemas/lesson.json": "./schemas/lesson.json",
-    "./schemas/step.json": "./schemas/step.json"
+    "./schemas/step.json": "./schemas/step.json",
+    "./shell": "./src/browser/shell.js"
   },
   "files": [
     "src",
