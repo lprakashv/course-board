@@ -1,0 +1,25 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 570 285">
+  <defs>
+    <marker id="arrow" viewBox="0 0 10 10" refX="8" refY="5" markerWidth="7" markerHeight="7" orient="auto">
+      <path d="M1 1l7 4-7 4" fill="none" stroke="#36614d" stroke-width="1.4"/>
+    </marker>
+  </defs>
+  <g font-family="system-ui, sans-serif">
+    <g fill="#fffdf7" stroke="#799385" stroke-width="1.4">
+      <rect x="22" y="33" width="185" height="91" rx="13"/>
+      <rect x="363" y="164" width="185" height="91" rx="13" fill="#f4f4eb" stroke-dasharray="5 4"/>
+    </g>
+    <rect x="363" y="33" width="185" height="91" rx="13" fill="#dbe9ce" stroke="#36614d" stroke-width="1.7"/>
+    <path d="M207 79h148" fill="none" stroke="#36614d" stroke-width="2" marker-end="url(#arrow)"/>
+    <path d="M462 125v29" fill="none" stroke="#9aab9f" stroke-dasharray="5 5"/>
+    <text x="41" y="69" font-size="23" fill="#20342a">Service</text>
+    <text x="41" y="97" font-size="15" fill="#455c50">Handles the request</text>
+    <text x="382" y="69" font-size="23" fill="#20342a">Cache</text>
+    <text x="382" y="97" font-size="15" fill="#455c50">Checks the key</text>
+    <text x="382" y="200" font-size="23" fill="#20342a">Database</text>
+    <text x="382" y="228" font-size="15" fill="#455c50">Waits for a miss</text>
+    <text x="282" y="64" text-anchor="middle" font-size="14" fill="#355644">Look up key</text>
+    <rect x="223" y="92" width="119" height="27" rx="5" fill="#fffdf7" stroke="#b2c4b3"/>
+    <text x="282" y="110" text-anchor="middle" font-family="monospace" font-size="14" fill="#355644">product:42</text>
+  </g>
+</svg>

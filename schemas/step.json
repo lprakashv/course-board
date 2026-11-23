@@ -1,0 +1,44 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "title": "Course Board step metadata",
+  "type": "object",
+  "additionalProperties": false,
+  "properties": {
+    "diagram": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["type", "alt"],
+      "properties": {
+        "type": { "enum": ["ascii", "image", "svg", "excalidraw", "html", "custom"] },
+        "alt": { "$ref": "#/definitions/text" },
+        "caption": { "$ref": "#/definitions/text" },
+        "text": { "$ref": "#/definitions/text" },
+        "src": { "$ref": "#/definitions/text" },
+        "source": { "type": "string", "pattern": "\\.excalidraw$" },
+        "name": { "type": "string", "pattern": "^[a-z][a-z0-9]*(?:-[a-z0-9]+)*$" },
+        "data": { "$ref": "#/definitions/jsonValue" }
+      },
+      "oneOf": [
+        { "properties": { "type": { "const": "ascii" } }, "required": ["text"], "propertyNames": { "enum": ["type", "alt", "caption", "text"] } },
+        { "properties": { "type": { "const": "image" }, "src": { "type": "string", "pattern": "\\.(?:png|jpe?g|gif|webp|avif)$" } }, "required": ["src"], "propertyNames": { "enum": ["type", "alt", "caption", "src"] } },
+        { "properties": { "type": { "const": "svg" }, "src": { "type": "string", "pattern": "\\.svg$" } }, "required": ["src"], "propertyNames": { "enum": ["type", "alt", "caption", "src"] } },
+        { "properties": { "type": { "const": "excalidraw" }, "src": { "type": "string", "pattern": "\\.svg$" } }, "required": ["src"], "propertyNames": { "enum": ["type", "alt", "caption", "src", "source"] } },
+        { "properties": { "type": { "const": "html" }, "src": { "type": "string", "pattern": "\\.html$" } }, "required": ["src"], "propertyNames": { "enum": ["type", "alt", "caption", "src"] } },
+        { "properties": { "type": { "const": "custom" } }, "required": ["name"], "propertyNames": { "enum": ["type", "alt", "caption", "name", "data"] } }
+      ]
+    }
+  },
+  "definitions": {
+    "text": { "type": "string", "pattern": "\\S" },
+    "jsonValue": {
+      "anyOf": [
+        { "type": "null" },
+        { "type": "boolean" },
+        { "type": "number" },
+        { "type": "string" },
+        { "type": "array", "items": { "$ref": "#/definitions/jsonValue" } },
+        { "type": "object", "additionalProperties": { "$ref": "#/definitions/jsonValue" } }
+      ]
+    }
+  }
+}

@@ -1,0 +1,11 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 485 175">
+  <g fill="#fffdf7" stroke="#375c4a" stroke-linejoin="round" stroke-width="2">
+    <path d="M21 51Q22 45 31 46L202 47Q208 47 208 54L207 122 199 129 30 129 21 123Z"/>
+    <path d="M276 51L283 46 455 47 462 54 461 122 453 129 284 130 276 123Z"/>
+    <path d="M209 86L272 87 254 77M272 87L253 98" fill="none" stroke-linecap="round"/>
+  </g>
+  <g font-family="system-ui, sans-serif" font-size="18" text-anchor="middle" fill="#284137">
+    <text x="114" y="94">Write new record</text>
+    <text x="368" y="94">Remove old copy</text>
+  </g>
+</svg>

@@ -1,0 +1,20 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Cache miss sequence</title>
+  <style>
+    :root { font-family: system-ui, sans-serif; color: #1e2e28; }
+    ol { max-width: 25rem; margin: 1rem auto; padding-left: 2rem; }
+    li { margin-block: .7rem; padding: .8rem; background: #fffdf7; border-radius: .5rem; }
+  </style>
+</head>
+<body>
+  <ol>
+    <li><strong>Read.</strong> Get the record from the database.</li>
+    <li><strong>Store.</strong> Add the value and expiry time to the cache.</li>
+    <li><strong>Return.</strong> Send the record to the client.</li>
+  </ol>
+</body>
+</html>

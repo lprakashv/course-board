@@ -1,0 +1,70 @@
+name: Course Board CI and Release
+
+on:
+  push:
+    branches: [main]
+    tags: ['v*']
+  pull_request:
+
+permissions:
+  contents: read
+
+jobs:
+  check:
+    runs-on: ubuntu-latest
+    strategy:
+      matrix:
+        node: ['20.19.0', '22']
+    steps:
+      - uses: actions/checkout@v6
+        with:
+          persist-credentials: false
+      - uses: actions/setup-node@v6
+        with:
+          node-version: ${{ matrix.node }}
+          cache: npm
+      - run: npm ci
+      - run: npm run lint
+      - run: npm test
+      - run: npm run coverage
+      - run: npm run build
+      - run: npm pack --dry-run
+
+  release:
+    if: github.ref_type == 'tag'
+    needs: check
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write
+    concurrency:
+      group: release-${{ github.ref }}
+      cancel-in-progress: false
+    steps:
+      - uses: actions/checkout@v6
+        with:
+          persist-credentials: false
+      - uses: actions/setup-node@v6
+        with:
+          node-version: '22'
+          package-manager-cache: false
+      - name: Pack the tagged version
+        id: package
+        shell: bash
+        env:
+          RELEASE_TAG: ${{ github.ref_name }}
+        run: |
+          version=$(node -p "require('./package.json').version")
+          if [[ ! "$version" =~ ^[0-9]+\.[0-9]+\.[0-9]+$ || "$RELEASE_TAG" != "v$version" ]]; then
+            echo "Expected a stable package version with a matching tag. Package: $version. Tag: $RELEASE_TAG." >&2
+            exit 1
+          fi
+          archive=$(npm pack --silent)
+          test -f "$archive"
+          echo "archive=$archive" >> "$GITHUB_OUTPUT"
+      - name: Publish the GitHub Release
+        env:
+          GH_TOKEN: ${{ github.token }}
+          GH_REPO: ${{ github.repository }}
+          RELEASE_TAG: ${{ github.ref_name }}
+          PACKAGE_ARCHIVE: ${{ steps.package.outputs.archive }}
+        run: gh release create "$RELEASE_TAG" "$PACKAGE_ARCHIVE" --verify-tag --generate-notes

@@ -1,0 +1,34 @@
+{
+  "name": "@lprakashv/course-board",
+  "version": "0.1.0",
+  "description": "Build and publish step-by-step static courses from Markdown.",
+  "type": "module",
+  "license": "MIT",
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/lprakashv/course-board.git"
+  },
+  "engines": { "node": ">=20.19.0" },
+  "bin": { "course-board": "./src/cli.js" },
+  "exports": {
+    ".": "./src/index.js",
+    "./diagrams": "./src/browser/diagrams.js",
+    "./schemas/manifest.json": "./schemas/manifest.json",
+    "./schemas/lesson.json": "./schemas/lesson.json",
+    "./schemas/step.json": "./schemas/step.json"
+  },
+  "files": ["src", "schemas", "example/content", "example/public", "docs"],
+  "scripts": {
+    "dev": "node src/cli.js dev example",
+    "run": "node src/cli.js preview example",
+    "build": "node src/cli.js build example",
+    "lint": "node scripts/lint.js && node src/cli.js check example",
+    "test": "node --test",
+    "coverage": "node --experimental-test-coverage --test"
+  },
+  "dependencies": {
+    "ajv": "8.20.0",
+    "markdown-it": "15.0.3",
+    "yaml": "2.9.0"
+  }
+}
