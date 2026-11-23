@@ -28,14 +28,17 @@ function analyticsMarkup(settings) {
     return escapeHtml(url.href);
   };
   if (google) {
-    if (!/^G-[A-Z0-9]+$/i.test(google)) throw new Error('GOOGLE_TAG_ID must be a GA4 measurement ID.');
-    scripts.push(`<script async src="https://www.googletagmanager.com/gtag/js?id=${google}"></script>
+    if (!/^(?:G|GTM)-[A-Z0-9]+$/i.test(google)) {
+      throw new Error('GOOGLE_TAG_ID must be a GA4 measurement ID or Google tag container ID.');
+    }
+    const container = /^GTM-/i.test(google);
+    scripts.push(`<script async src="https://www.googletagmanager.com/${container ? 'gtm.js' : 'gtag/js'}?id=${google}"></script>
   <script>
     window.dataLayer = window.dataLayer || [];
     function gtag() { dataLayer.push(arguments); }
-    gtag('js', new Date());
+    gtag('js', new Date());${container ? '' : `
     gtag('config', '${google}');
-    window.addEventListener('hashchange', () => gtag('event', 'page_view', { page_location: location.href }));
+    window.addEventListener('hashchange', () => gtag('event', 'page_view', { page_location: location.href }));`}
   </script>`);
   }
   if (umami) {
