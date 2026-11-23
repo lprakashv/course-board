@@ -1,0 +1,24 @@
+README.md
+  s_bcd9ffe58f728b::t_be878237fe0d21 5-10
+  s_bcd9ffe58f728b::t_23a9d279c79c40 52
+.github/workflows/ci.yml
+  s_bcd9ffe58f728b::t_23a9d279c79c40 33-82
+docs/publishing.md
+  s_bcd9ffe58f728b::t_be878237fe0d21 23
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.7.5",
+  "base_commit_sha": "28c8fb1963ac2d1dce549f95b6464982e850f614",
+  "prompts": {},
+  "sessions": {
+    "s_bcd9ffe58f728b": {
+      "agent_id": {
+        "tool": "codex",
+        "id": "01a207bd-d6cc-7dc2-bd8b-938af9f372b9",
+        "model": "gpt-6-luna"
+      },
+      "human_author": "Lalit Vatsal <lprakashv@gmail.com>"
+    }
+  }
+}
