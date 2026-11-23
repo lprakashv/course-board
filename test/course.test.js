@@ -126,6 +126,8 @@ test('a custom shell receives validated content and preserves the previous build
   } });
   const before = await readFile(join(output, 'index.html'), 'utf8');
   assert.ok(before.length);
+  await assert.rejects(readFile(join(output, 'course.json')), { code: 'ENOENT' });
+  await assert.rejects(buildSite(path, { shell() {}, customize() {} }), /Choose either shell or customize/);
   await assert.rejects(buildSite(path, { shell: async () => { throw new Error('shell failed'); } }), /shell failed/);
   assert.equal(await readFile(join(output, 'index.html'), 'utf8'), before);
 });

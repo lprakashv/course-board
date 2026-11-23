@@ -152,22 +152,36 @@ Import `renderDiagram` from `@lprakashv/course-board/diagrams` in a bundler proj
 
 A chapter, lesson, or step can contain a `data` mapping with JSON-compatible values. Use it for course-specific settings. Course Board validates the JSON values. A course must validate the meaning of its own settings.
 
-For a custom interface, call `buildSite(directory, { shell })` from a Node build script. The async `shell({ root, site, course })` function writes the complete site to `site`. `course` is the validated Course Board model. The function owns the HTML, assets, and course data it writes. If it fails, the previous `dist/` stays in place. Treat the shell as trusted code. The default shell remains unchanged when the option is omitted. For example:
+### Share the build and preview
+
+Use the same customization module for production and development. Course Board validates the source and stages `index.html`, the browser files under `_board/`, the compiled browser model in `course.json`, assets from `public/` under `media/`, and `.nojekyll`. Then it calls the customization function. The function receives the absolute project path as `root`, the staging directory as `site`, and the validated model as `course`. The staged JSON keeps rendered step HTML. Use the callback model when you need the original step Markdown as well.
+
+Create `scripts/course-shell.mjs` with a default export. This example replaces the index with the course's own HTML.
 
 ```js
-import { writeFile } from 'node:fs/promises';
+import { copyFile } from 'node:fs/promises';
 import { join } from 'node:path';
-import { buildSite } from '@lprakashv/course-board';
 
-await buildSite('.', {
-  shell: async ({ site, course }) => {
-    await writeFile(join(site, 'index.html'), '<h1>My course</h1>');
-    await writeFile(join(site, 'course.json'), JSON.stringify(course));
-  },
-});
+export default async function customize({ root, site }) {
+  await copyFile(join(root, 'site/index.html'), join(site, 'index.html'));
+}
 ```
 
-Write any other assets that the interface needs inside `site`. The build publishes that directory as `dist/`.
+Write additional output to `site`. Use paths relative to the published index so the site works at the root and under a project path. For example, a custom index can load `./_board/app.js` with `data-course-board-adapter="../app.js"` if the callback stages an adapter as `app.js` at the site root.
+
+```sh
+course-board dev --customize scripts/course-shell.mjs
+course-board build --customize scripts/course-shell.mjs
+course-board preview
+```
+
+Run these as npm scripts or with `npm exec --`. The optional project directory comes after the command. Resolve a relative customization path from that directory. The module is trusted Node.js code and runs when you explicitly select it. In development, reload the page after edits to the course, public assets, or files that the callback reads. Restart the server after edits to the customization module or its Node.js imports. Production preview serves the last build.
+
+The Node API uses the same callback. Import it and call `buildSite(directory, { customize })`. A failure in the compiler or callback preserves the previous `dist/`.
+
+### Own the full build output
+
+For an existing full-site callback, use `buildSite(directory, { shell })`. The callback receives the same context and prepares all site files. Choose one callback for each build. Omitting both uses the default Course Board site.
 
 ## Adapt the default browser shell
 
