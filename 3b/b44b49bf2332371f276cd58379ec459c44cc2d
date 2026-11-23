@@ -1,0 +1,84 @@
+README.md
+  s_436a2c5f6f7417::t_b59f0438a5f5dc 1-51
+AGENTS.md
+  s_436a2c5f6f7417::t_6667d60da3624b 1-47
+docs/migrations.md
+  s_436a2c5f6f7417::t_6667d60da3624b 9
+  s_436a2c5f6f7417::t_dd7c1416ae1a09 6-8
+  s_436a2c5f6f7417::t_6e5f96ecac2322 10-12
+  s_436a2c5f6f7417::t_49dbd32dbbb31e 1-5,13-114
+docs/publishing.md
+  s_436a2c5f6f7417::t_6667d60da3624b 19
+  s_436a2c5f6f7417::t_b59f0438a5f5dc 1-18,20-67
+.github/workflows/ci.yml
+  s_436a2c5f6f7417::t_b59f0438a5f5dc 1-70
+package.json
+  s_436a2c5f6f7417::t_b59f0438a5f5dc 1-34
+docs/authoring.md
+  s_436a2c5f6f7417::t_b59f0438a5f5dc 1-12,19-149
+  s_436a2c5f6f7417::t_6667d60da3624b 13-18
+.gitignore
+  s_436a2c5f6f7417::t_7bb17e782048bf 1-5
+LICENSE
+  s_436a2c5f6f7417::t_9118663801e55b 1-21
+docs/github-pages.yml
+  s_436a2c5f6f7417::t_6ad12288c5f289 1-47
+example/content/course.json
+  s_436a2c5f6f7417::t_e31ceb1cafe890 1-13
+example/content/lessons/keep-data-current.md
+  s_436a2c5f6f7417::t_1b79ef5256dfaf 1-23
+example/content/lessons/measure-the-hit-rate.md
+  s_436a2c5f6f7417::t_05b6040c34d937 1-35
+example/content/lessons/read-through-a-cache.md
+  s_436a2c5f6f7417::t_59717091a11859 1-50
+example/public/diagrams/cache-check.svg
+  s_436a2c5f6f7417::t_637640be30aa6e 1-25
+example/public/diagrams/invalidate.excalidraw
+  s_436a2c5f6f7417::t_3af935fdcc0871 1-186
+example/public/diagrams/invalidate.svg
+  s_436a2c5f6f7417::t_d15acef2217a9b 1-11
+example/public/diagrams/miss.html
+  s_436a2c5f6f7417::t_61e49fa4730fe9 1-20
+example/public/extensions.js
+  s_436a2c5f6f7417::t_b35824500d310c 1-10
+example/public/theme.css
+  s_436a2c5f6f7417::t_9645ee87d3f627 1-5
+package-lock.json
+  s_436a2c5f6f7417::t_a0ad45a09db11c 1-187
+schemas/lesson.json
+  s_436a2c5f6f7417::t_8211ba462540d4 1-11
+schemas/manifest.json
+  s_436a2c5f6f7417::t_ffb9ca99cd836d 1-38
+schemas/step.json
+  s_436a2c5f6f7417::t_2d14d585e4895c 1-44
+scripts/lint.js
+  s_436a2c5f6f7417::t_f82fe903b42600 1-11
+src/browser/diagrams.js
+  s_436a2c5f6f7417::t_02f3f658071ec3 1-40
+src/browser/navigation.js
+  s_436a2c5f6f7417::t_b3eb16c8ef02a0 1-12
+src/cli.js
+  s_436a2c5f6f7417::t_8ba7a66a2dcb33 1-54
+src/index.js
+  s_436a2c5f6f7417::t_20d000f8482ded 1-2
+src/serve.js
+  s_436a2c5f6f7417::t_841a2877b54aac 1-60
+test/course.test.js
+  s_436a2c5f6f7417::t_9ea71cd1300141 1-111
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.7.5",
+  "base_commit_sha": "3bb44b49bf2332371f276cd58379ec459c44cc2d",
+  "prompts": {},
+  "sessions": {
+    "s_436a2c5f6f7417": {
+      "agent_id": {
+        "tool": "codex",
+        "id": "01a20798-0756-74e1-af57-50a52804be39",
+        "model": "gpt-6.2-sol"
+      },
+      "human_author": "Lalit Vatsal <lprakashv@gmail.com>"
+    }
+  }
+}
