@@ -64,6 +64,25 @@ test('the built page sets the course preset before the learner loads', async t =
   assert.doesNotMatch(index, /\.\/media\/theme\.css/);
 });
 
+test('the built HTML exposes escaped course metadata to social previews', async t => {
+  const path = await fixture(t);
+  const manifestPath = join(path, 'content/course.json');
+  const manifest = JSON.parse(await readFile(manifestPath, 'utf8'));
+  manifest.title = 'Cache & "Data" <Guide>';
+  manifest.description = 'Learn "cache" & more.';
+  await writeFile(manifestPath, JSON.stringify(manifest));
+  const output = await buildSite(path);
+  let html = await readFile(join(output, 'index.html'), 'utf8');
+  assert.match(html, /<title>Cache &amp; &quot;Data&quot; &lt;Guide&gt;<\/title>/);
+  assert.match(html, /property="og:title" content="Cache &amp; &quot;Data&quot; &lt;Guide&gt;"/);
+  assert.match(html, /name="twitter:description" content="Learn &quot;cache&quot; &amp; more\."/);
+  delete manifest.description;
+  await writeFile(manifestPath, JSON.stringify(manifest));
+  await buildSite(path);
+  html = await readFile(join(output, 'index.html'), 'utf8');
+  assert.doesNotMatch(html, /(?:name|property)="(?:og:|twitter:)?description"/);
+});
+
 test('an invalid source preserves the previous build', async t => {
   const path = await fixture(t);
   const output = await buildSite(path);
@@ -141,6 +160,8 @@ test('the diagram API escapes text, isolates HTML, and calls custom renderers', 
 
 test('direct links resolve steps and clamp numbers to lesson bounds', () => {
   const lessons = [{ id: 'first', steps: ['a'] }, { id: 'second', steps: ['a', 'b'] }];
+  assert.equal(getRoute('', lessons), null);
+  assert.equal(getRoute('#/', lessons), null);
   assert.equal(lessonHref('second', 1), '#/second/2');
   assert.deepEqual(getRoute('#/second/20', lessons), { lesson: lessons[1], index: 1, step: 1 });
   assert.deepEqual(getRoute('#/unknown/8', lessons), { lesson: lessons[0], index: 0, step: 0 });

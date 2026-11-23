@@ -77,6 +77,8 @@ Edit `content/course.json`. The chapter list and its lesson ID lists set the ord
 - Use lowercase letters, digits, and single hyphens in course and lesson IDs. Each lesson ID must be unique within a course.
 - Use `content/lessons/<id>.md` for each lesson. Numbered links use `#/<id>/<step-number>`, with step numbers starting at 1. Keep published order stable for readers who use these links.
 - Use `theme` and `extension` to reference optional files in `public/`. The files are copied to `dist/media/`.
+- The default site opens on a course index that lists all chapters and lessons. Select **Home** to return to it. The index credits Course Board.
+- The build puts the course `title` and optional `description` in the HTML and social preview metadata. Social sites see the same course title for all step links because fragment routes share one HTML page. Custom full shells must supply their own metadata.
 
 ## 4. Write one Markdown file per lesson
 
