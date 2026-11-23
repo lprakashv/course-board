@@ -51,6 +51,7 @@ Open [the production preview](http://127.0.0.1:4174/). The build writes to `exam
 ## Use Course Board in a project
 
 - [Create, write, and customize a course](docs/authoring.md)
+- [Use the same build and preview with a custom shell](docs/authoring.md#share-the-build-and-preview)
 - [Publish a release artifact, publish to npm, or deploy a site to GitHub Pages](docs/publishing.md)
 - [Adopt it in DSA Blueprint and Designed to Scale](docs/migrations.md)
 - [Browse the example source](example/content/course.json)

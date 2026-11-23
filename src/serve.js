@@ -11,7 +11,7 @@ const mimeTypes = new Map(Object.entries({
   '.webp': 'image/webp', '.avif': 'image/avif', '.woff2': 'font/woff2',
 }));
 
-export async function serve(directory, { dev, port }) {
+export async function serve(directory, { dev, port, customize }) {
   const output = resolve(directory, 'dist');
   let pendingBuild;
   const server = createServer(async (request, response) => {
@@ -34,7 +34,7 @@ export async function serve(directory, { dev, port }) {
     }
     try {
       if (dev && path === '/index.html') {
-        pendingBuild ??= buildSite(directory).finally(() => { pendingBuild = undefined; });
+        pendingBuild ??= buildSite(directory, { customize }).finally(() => { pendingBuild = undefined; });
         await pendingBuild;
       }
       const data = await readFile(file);

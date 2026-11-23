@@ -114,3 +114,13 @@ Pilot one lesson before moving a whole course. Keep lesson IDs and step order. T
 4. If you later replace the app shell, plan a route and storage migration first. DSA Blueprint uses `#/learn/<id>/<step>`, and Course Board uses `#/<id>/<step>`. The default shell uses its own progress keys.
 
 If a first-stage deploy fails, revert the integration commit and rerun that course's existing Pages workflow. Keep the existing URLs and Pages source settings during the rollback.
+
+
+## 5. Share custom builds and previews
+
+Use the [shared build and preview](authoring.md#share-the-build-and-preview) in a scratch checkout first. Move the full-site callback into a customization module and update it to use the staged files. Keep the existing course HTML, CSS, route parser, and storage keys.
+
+- **DSA Blueprint** can import `_board/diagrams.js` and `_board/shell.js` from its adapter and use the staged `media/`. Its customization function can write the JavaScript model from the supplied `course` and apply its analytics setting. Another option is to read the staged `course.json` if the adapter needs only rendered step HTML.
+- **Designed to Scale** can import `_board/diagrams.js` from its app. Its customization function can still produce its own adapted model, copy Rough.js and its license, and apply its analytics setting.
+
+Use the customization module with both `course-board dev` and `course-board build`. Reload after editing a lesson. Then build, run `course-board preview`, and check a direct step link and stored settings. Also check the site under a subdirectory. The `shell` option remains available for a callback that owns all output.
