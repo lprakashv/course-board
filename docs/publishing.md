@@ -22,7 +22,7 @@ Check the file list from the dry run. Expect source modules, schemas, example so
 
 The [CI and release workflow](../.github/workflows/ci.yml) checks pull requests and pushes to `main`. A pushed version tag runs the same checks on Node.js 20.19 and 22. If both pass, the workflow packs the tagged source and attaches the `.tgz` to the GitHub Release. The tag must match the stable version in `package.json`.
 
-The [showcase workflow](../.github/workflows/showcase.yml) builds the example and the latest `main` of each public course repository and captures their local builds. After the CI workflow passes on a push to `main`, it publishes only the three images to the `showcase-images` branch. It can also run manually. Its build jobs have read-only permissions; only the image publishing job can write repository contents. The source branch does not need an automation bypass. The README images need the first successful showcase run, and GitHub image caches can delay updates. A failed course build leaves the previous images in place.
+The [showcase workflow](../.github/workflows/showcase.yml) builds the example and the latest `main` of each public course repository and captures their local builds. After the CI workflow passes on a push to `main`, it publishes only the three images to the `showcase-images` branch. It can also run manually. Its build jobs have read-only permissions; only the image publishing job can write repository contents. The source branch does not need an automation bypass. The showcase screenshots appear in the README after the first successful showcase run. GitHub image caches can delay updates. A failed course build leaves the previous images in place.
 
 ## Protect the source branch
 

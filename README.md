@@ -1,6 +1,10 @@
-# Course Board
+# <img src="src/browser/favicon.svg" alt="" width="36" height="36"> Course Board
 
 Build a static course from Markdown. Put content in chapters, divide each lesson into steps, and add a whiteboard where it helps the learner. Course Board provides lesson search, direct step links, keyboard navigation, and progress saved in the browser.
+
+[👀 Preview](#preview) · [🚀 Try the example](#try-the-example) · [📚 Read the guides](#use-course-board-in-a-project)
+
+![A Markdown lesson page leads to three numbered steps and a flowchart on a whiteboard.](docs/course-board-artwork.webp)
 
 ## Preview
 
