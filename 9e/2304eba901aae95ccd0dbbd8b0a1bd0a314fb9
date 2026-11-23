@@ -1,0 +1,41 @@
+README.md
+  s_8b2c18a773b565::t_c6a036ddea8643 41
+docs/authoring.md
+  s_8b2c18a773b565::t_549fb96bc89d11 10,16,22,171-176
+docs/migrations.md
+  s_8b2c18a773b565::t_7beda6c4b919e6 13,16
+docs/publishing.md
+  s_8b2c18a773b565::t_0b7de9b9d6975f 19,26,30-31
+package-lock.json
+  s_8b2c18a773b565::t_0fd7145143dedd 3,9
+package.json
+  s_8b2c18a773b565::t_f36c887a1d444d 3,22-23
+src/browser/app.js
+  s_8b2c18a773b565::t_fff09bc6ecafe6 3,5,28-30,66,129,140,166,174-179
+src/browser/shell.js
+  s_8b2c18a773b565::t_6ab316a62d3628 1-18
+src/build.js
+  s_8b2c18a773b565::t_9237bfe9c83c91 11-18,33
+src/cli.js
+  s_8b2c18a773b565::t_9837e57e160822 3,12-13,40-44
+src/index.js
+  s_8b2c18a773b565::t_a8adce531ce2ae 2
+test/shell.test.js
+  s_8b2c18a773b565::t_85422fda79f4a5 1-41
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.7.5",
+  "base_commit_sha": "9e2304eba901aae95ccd0dbbd8b0a1bd0a314fb9",
+  "prompts": {},
+  "sessions": {
+    "s_8b2c18a773b565": {
+      "agent_id": {
+        "tool": "codex",
+        "id": "01a207bd-4530-7533-9337-a2b2fcb21515",
+        "model": "gpt-6.1-terra"
+      },
+      "human_author": "Lalit Vatsal <lprakashv@gmail.com>"
+    }
+  }
+}
