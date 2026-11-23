@@ -14,10 +14,10 @@ The steps below assume the local repositories are named `coding-interview-patter
 
 ```sh
 # To test locally
-npm install --save-dev --save-exact ../course-board/lprakashv-course-board-0.1.2.tgz
+npm install --save-dev --save-exact ../course-board/lprakashv-course-board-0.3.1.tgz
 
 # Before deploying with the public release
-npm install --save-dev --save-exact @lprakashv/course-board@0.1.2
+npm install --save-dev --save-exact @lprakashv/course-board@0.3.1
 ```
 
 ## 2. DSA Blueprint
