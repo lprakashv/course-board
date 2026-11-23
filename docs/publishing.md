@@ -1,6 +1,6 @@
 # Publish a package or a site
 
-The npm package provides the compiler, CLI import, renderer, schemas, and sample files. Each course builds a separate static site for its own Pages repository. Publish only the output of `course-board build` in `dist/`. [Run Studio from a source checkout](authoring.md#edit-a-course-in-the-browser) for local editing. Its editor dependencies are development dependencies of Course Board.
+The npm package provides the compiler, CLI import, renderer, schemas, and sample files. Each course builds a separate static site for its own Pages repository. Publish only the output of `course-board build` in `dist/`. [Run Studio from a source checkout](studio.md#start-studio) for local editing. Its editor dependencies are development dependencies of Course Board.
 
 ## 1. Test the package locally
 

@@ -56,21 +56,7 @@ The import creates `content/course.json`, `content/lessons/<id>.md`, and any map
 
 ## Edit a course in the browser
 
-Run these commands from a Course Board source checkout. Pass the path to your course directory.
-
-```sh
-npm ci
-node src/cli.js author /path/to/my-course
-```
-
-Open [Course Board Studio](http://127.0.0.1:4175/). You can also open a new directory to start a course. Add at least one chapter, lesson, and step, then select **Save course**. Use the course preview on port 4173 to read the saved course. Set `PORT` before the `author` command to use a different Studio port.
-
-- Use the outline to add and edit chapters and lessons. Use Markdown for step text and the step order controls to set the reading order.
-- Studio preserves existing step IDs and snippet references. Edit these fields in the lesson's step block. Edit the referenced schema and snippet files in `content/`.
-- Attach an image, SVG, or standalone HTML board to a step, or select **Open whiteboard** to draw with Excalidraw. In the editor, select **Import scene** to open a `.excalidraw` file. Use **Apply board** to prepare the scene and its SVG export. Save the course to write both files into `public/diagrams/`.
-- Use **Course settings** to select a built-in style or attach a CSS file. Studio saves uploaded files under `public/`. A saved file is available in the static build.
-
-The editor runs on the local machine and saves to the directory you pass to `author`. Keep the browser tab open until you save. If another author or CLI command changes the course while it is open, reload Studio before you save again. The reader preview and production build use the saved files.
+Use [Course Board Studio](studio.md) to edit the outline, lesson steps, themes, and whiteboards. Studio runs from a Course Board source checkout. It saves the same files described in this guide.
 
 ## 3. Set the course and chapter order
 
@@ -166,7 +152,7 @@ Put diagram files in `public/`. Use paths relative to that directory in `src` an
 | `html` | `src` pointing to an HTML document | HTML and CSS in a sandboxed frame with scripts disabled |
 | `custom` | `name` and optional `data` | The HTML that a course extension returns |
 
-Studio saves the scene and exports the SVG when you apply a board. If you edit a scene outside Studio, export a new SVG when you save it. Course Board displays the SVG and offers the scene as a download when `source` is set. [Excalidraw export docs](https://docs.excalidraw.com/docs/@excalidraw/excalidraw/api/utils/export)
+In Studio, apply the board and save the course to save the scene and its SVG export. If you edit a scene outside Studio, export a new SVG when you save it. Course Board displays the SVG and offers the scene as a download when `source` is set. [Excalidraw export docs](https://docs.excalidraw.com/docs/@excalidraw/excalidraw/api/utils/export)
 
 ## 6. Customize the theme or add a renderer
 
