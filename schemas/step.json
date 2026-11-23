@@ -4,6 +4,19 @@
   "type": "object",
   "additionalProperties": false,
   "properties": {
+    "id": {
+      "type": "string",
+      "pattern": "^[a-z][a-z0-9]*(?:-[a-z0-9]+)*$"
+    },
+    "snippet": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["src", "language"],
+      "properties": {
+        "src": { "$ref": "#/definitions/text" },
+        "language": { "type": "string", "pattern": "^[a-zA-Z0-9_-]+$" }
+      }
+    },
     "diagram": {
       "type": "object",
       "additionalProperties": false,

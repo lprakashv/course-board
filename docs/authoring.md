@@ -54,7 +54,7 @@ Edit `content/course.json`. The chapter list and its lesson ID lists set the ord
 ```
 
 - Use lowercase letters, digits, and single hyphens in course and lesson IDs. Each lesson ID must be unique within a course.
-- Use `content/lessons/<id>.md` for each lesson. Keep IDs and step order stable after publication. Direct links use `#/<id>/<step-number>`, with step numbers starting at 1.
+- Use `content/lessons/<id>.md` for each lesson. Numbered links use `#/<id>/<step-number>`, with step numbers starting at 1. Keep published order stable for readers who use these links.
 - Use `theme` and `extension` to reference optional files in `public/`. The files are copied to `dist/media/`.
 
 ## 4. Write one Markdown file per lesson
@@ -87,6 +87,21 @@ If the stored value is valid, send it to the client.
 ````
 
 Raw HTML in the Markdown is rendered as text. Use ordinary Markdown for links, lists, code and tables. For a local Markdown image, link to its published location, for example `![A request flow](./media/diagrams/request.svg)`. The diagram schema validates assets in step blocks. Check ordinary Markdown links separately.
+
+### Give a step a stable link and a code example
+
+Add an optional ID and snippet to a step block.
+
+```step
+id: lookup-key
+snippet:
+  src: cache/lookup.py
+  language: python
+```
+
+The ID starts with a lowercase letter and uses lowercase letters, digits, and single hyphens. Use each ID once per lesson. The default shell links to `#/cache-hit/lookup-key` when a step has this ID. The link follows the same step if it moves. Numbered links still use the current step order.
+
+Place the example at `content/snippets/cache/lookup.py`. Use a regular UTF-8 file and a path relative to `content/snippets/`. The compiler adds the escaped code below the step prose and supplies its original text as `step.snippet.text` to custom shells. The browser receives the rendered example through the course model.
 
 ## 5. Choose a diagram type
 
@@ -150,7 +165,26 @@ Import `renderDiagram` from `@lprakashv/course-board/diagrams` in a bundler proj
 
 ## Extend content and the shell
 
-A chapter, lesson, or step can contain a `data` mapping with JSON-compatible values. Use it for course-specific settings. Course Board validates the JSON values. A course must validate the meaning of its own settings.
+A chapter, lesson, or step can contain a `data` mapping with JSON-compatible values. Use it for course-specific settings. To validate the fields, set `"dataSchema": "data-schema.json"` in the manifest and place this JSON file in `content/`.
+
+```json
+{
+  "step": {
+    "type": "object",
+    "properties": { "note": { "type": "string" } },
+    "additionalProperties": false
+  },
+  "diagrams": {
+    "queue-depth": {
+      "type": "object",
+      "required": ["depth"],
+      "properties": { "depth": { "type": "integer", "minimum": 0 } }
+    }
+  }
+}
+```
+
+Use optional `chapter`, `lesson`, and `step` keys for their `data` mappings and optional `diagrams` entries for custom renderers by name. Each entry is a standalone draft-07 JSON Schema. Use references within that schema. Course Board validates an empty object when the applicable `data` is absent. The compiler, build, and development preview report validation errors with the source location.
 
 ### Share the build and preview
 

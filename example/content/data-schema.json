@@ -1,0 +1,16 @@
+{
+  "diagrams": {
+    "hit-rate": {
+      "type": "object",
+      "required": ["before", "after"],
+      "additionalProperties": false,
+      "properties": {
+        "before": { "$ref": "#/definitions/percent" },
+        "after": { "$ref": "#/definitions/percent" }
+      },
+      "definitions": {
+        "percent": { "type": "integer", "minimum": 0, "maximum": 100 }
+      }
+    }
+  }
+}

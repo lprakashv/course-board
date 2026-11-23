@@ -24,6 +24,7 @@ try {
 
   const chapters = course.chapters;
   const lessons = chapters.flatMap(chapter => chapter.lessons.map(lesson => ({ ...lesson, chapter })));
+  const stepHref = (lesson, index = 0) => lessonHref(lesson.id, lesson.steps[index].id ?? index);
   const storageKey = `course-board:${location.pathname.replace(/index\.html$/, '')}:${course.id}:completed`;
   const shell = createCourseShell({ storageKey, readRoute: hash => getRoute(hash, lessons) });
   const saved = shell.readState([]);
@@ -49,7 +50,7 @@ try {
       return `<section class="chapter"><h2>${text(chapter.title)}</h2><ul>
         ${matches.map(lesson => {
           const done = completed.has(lesson.id);
-          return `<li><a href="${lessonHref(lesson.id)}" ${lesson.id === current.id ? 'aria-current="page"' : ''}>
+          return `<li><a href="${stepHref(lesson)}" ${lesson.id === current.id ? 'aria-current="page"' : ''}>
             <span class="lesson-dot ${done ? 'done' : ''}" aria-hidden="true">${done ? '✓' : ''}</span>
             <span>${text(lesson.title)}</span>${done ? '<span class="sr-only"> (complete)</span>' : ''}
           </a></li>`;
@@ -67,10 +68,10 @@ try {
     const active = lesson.steps[step];
     const previousLesson = lessons[index - 1];
     const nextLesson = lessons[index + 1];
-    const previous = step > 0 ? lessonHref(lesson.id, step - 1)
-      : previousLesson && lessonHref(previousLesson.id, previousLesson.steps.length - 1);
-    const next = step + 1 < lesson.steps.length ? lessonHref(lesson.id, step + 1)
-      : nextLesson && lessonHref(nextLesson.id);
+    const previous = step > 0 ? stepHref(lesson, step - 1)
+      : previousLesson && stepHref(previousLesson, previousLesson.steps.length - 1);
+    const next = step + 1 < lesson.steps.length ? stepHref(lesson, step + 1)
+      : nextLesson && stepHref(nextLesson);
 
     document.title = `${lesson.title} · ${course.title}`;
     $('breadcrumb').textContent = lesson.chapter.title;
@@ -102,7 +103,7 @@ try {
     </header>
     <nav class="steps" aria-label="Steps">
       ${lesson.steps.map((item, i) =>
-        `<a href="${lessonHref(lesson.id, i)}" ${i === step ? 'aria-current="step"' : ''}>
+        `<a href="${stepHref(lesson, i)}" ${i === step ? 'aria-current="step"' : ''}>
           <span aria-hidden="true">${i + 1}</span>${text(item.title)}
         </a>`).join('')}
     </nav>
@@ -162,7 +163,7 @@ try {
     focusStep = true;
     location.hash = link.hash;
   });
-  if (!location.hash) history.replaceState(null, '', lessonHref(lessons[0].id));
+  if (!location.hash) history.replaceState(null, '', stepHref(lessons[0]));
   shell.start({ render });
 } catch (error) {
   const message = document.createElement('p');
