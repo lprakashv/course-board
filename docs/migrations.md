@@ -124,3 +124,9 @@ Use the [shared build and preview](authoring.md#share-the-build-and-preview) in 
 - **Designed to Scale** can import `_board/diagrams.js` from its app. Its customization function can still produce its own adapted model, copy Rough.js and its license, and apply its analytics setting.
 
 Use the customization module with both `course-board dev` and `course-board build`. Reload after editing a lesson. Then build, run `course-board preview`, and check a direct step link and stored settings. Also check the site under a subdirectory. The `shell` option remains available for a callback that owns all output.
+
+## 6. Validate custom data and name steps
+
+Add step IDs to published lessons in their current order. The default shell uses the IDs in new links. Keep numbered links valid by keeping the published order. Custom shells can read `step.id` and add named links to their own route parser.
+
+Add a `dataSchema` to check the custom fields that your adapter and renderers use. A schema checks the supplied data structure. Keep course checks that compare fields across lessons or check diagram relationships. To reuse a code example, put the file in `content/snippets/` and link it from a step block. Custom shells can render the compiled step HTML or use `step.snippet.text` separately. See the [authoring guide](authoring.md#extend-content-and-the-shell).

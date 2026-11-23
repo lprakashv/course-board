@@ -3,7 +3,7 @@ import { join, relative, resolve, sep } from 'node:path';
 import Ajv from 'ajv';
 import MarkdownIt from 'markdown-it';
 import { parseDocument } from 'yaml';
-import { isAssetPath } from './browser/diagrams.js';
+import { escapeHtml, isAssetPath } from './browser/diagrams.js';
 
 async function loadSchema(name) {
   const url = new URL(`../schemas/${name}.json`, import.meta.url);
@@ -52,6 +52,7 @@ export function parseLesson(source, id) {
       ? [index] : []);
   if (headings[0] !== 0) throw new Error(`${file}: start the lesson with a ## step heading`);
 
+  const stepIds = new Set();
   const steps = headings.map((index, position) => {
     const location = `${file}, step ${position + 1}`;
     const [heading, titleToken, , fence] = tokens.slice(index, index + 4);
@@ -61,6 +62,10 @@ export function parseLesson(source, id) {
     const hasMetadata = fence?.type === 'fence' && fence.info.trim() === 'step';
     const settings = hasMetadata ? yaml(fence.content, location) : {};
     validate(stepSchema, settings, location);
+    if (settings.id) {
+      if (stepIds.has(settings.id)) throw new Error(`${location}: duplicate step ID "${settings.id}"`);
+      stepIds.add(settings.id);
+    }
 
     const start = hasMetadata ? fence.map[1] : heading.map[1];
     const prose = lines.slice(start, end).join('\n').trim();
@@ -97,6 +102,57 @@ function requireAsset(path, files, location) {
   if (!files.has(path)) throw new Error(`${location}: asset "${path}" must be a file in public/`);
 }
 
+async function readLocalContent(root, path, location) {
+  if (!isAssetPath(path)) throw new Error(`${location}: invalid content path "${path}"`);
+  try {
+    let target = root;
+    const parts = ['content', ...path.split('/')];
+    for (const [index, part] of parts.entries()) {
+      target = join(target, part);
+      const entry = await lstat(target);
+      if (!(index === parts.length - 1 ? entry.isFile() : entry.isDirectory())) {
+        throw new Error('expected a regular file in a directory without symbolic links');
+      }
+    }
+    return new TextDecoder('utf-8', { fatal: true }).decode(await readFile(target));
+  } catch (error) {
+    throw new Error(`${location}: cannot read content/${path}: ${error.message}`, { cause: error });
+  }
+}
+
+async function dataValidators(root, path, location) {
+  if (!path) return {};
+  const source = await readLocalContent(root, path, location);
+  try {
+    const definitions = JSON.parse(source);
+    if (!isObject(definitions) || Object.keys(definitions).some(key => !['chapter', 'lesson', 'step', 'diagrams'].includes(key))) {
+      throw new Error('expected an object with chapter, lesson, step, or diagrams keys');
+    }
+    const custom = new Ajv({ allErrors: true, addUsedSchema: false });
+    const { diagrams = {}, ...data } = definitions;
+    if (!isObject(diagrams)) throw new Error('diagrams must map renderer names to schemas');
+    for (const name of Object.keys(diagrams)) {
+      if (!/^[a-z][a-z0-9]*(?:-[a-z0-9]+)*$/.test(name)) throw new Error(`invalid renderer name "${name}"`);
+    }
+    const compile = entries => Object.fromEntries(Object.entries(entries).map(([key, schema]) => {
+      try {
+        return [key, custom.compile(schema)];
+      } catch (error) {
+        throw new Error(`${key}: ${error.message}`, { cause: error });
+      }
+    }));
+    return { ...compile(data), diagrams: compile(diagrams) };
+  } catch (error) {
+    throw new Error(`content/${path}: ${error.message}`, { cause: error });
+  }
+}
+
+const isObject = value => value !== null && typeof value === 'object' && !Array.isArray(value);
+
+function validateData(schema, data, location) {
+  if (schema) validate(schema, data === undefined ? {} : data, location);
+}
+
 export async function readProject(directory = '.') {
   const root = resolve(directory);
   const manifestPath = join(root, 'content/course.json');
@@ -108,6 +164,7 @@ export async function readProject(directory = '.') {
     throw new Error(`${manifestPath}: ${error.message}`, { cause: error });
   }
   validate(manifestSchema, manifest, manifestPath);
+  const validators = await dataValidators(root, manifest.dataSchema, manifestPath);
 
   const publicRoot = join(root, 'public');
   const files = await publicFiles(publicRoot);
@@ -117,19 +174,31 @@ export async function readProject(directory = '.') {
 
   const ids = new Set();
   const chapters = [];
-  for (const chapter of manifest.chapters) {
+  for (const [chapterIndex, chapter] of manifest.chapters.entries()) {
+    validateData(validators.chapter, chapter.data, `${manifestPath}, chapter ${chapterIndex + 1}`);
     const lessons = [];
     for (const id of chapter.lessons) {
       if (ids.has(id)) throw new Error(`${manifestPath}: duplicate lesson ID "${id}"`);
       ids.add(id);
       const source = await readFile(join(root, 'content', 'lessons', `${id}.md`), 'utf8');
       const lesson = parseLesson(source, id);
+      validateData(validators.lesson, lesson.data, `content/lessons/${id}.md`);
       for (const [index, step] of lesson.steps.entries()) {
+        const location = `content/lessons/${id}.md, step ${index + 1}`;
+        validateData(validators.step, step.data, location);
+        if (step.snippet) {
+          const { src, language } = step.snippet;
+          const code = await readLocalContent(root, `snippets/${src}`, location);
+          step.snippet.text = code;
+          step.html += `<pre><code class="language-${language}">${escapeHtml(code)}</code></pre>\n`;
+        }
         const diagram = step.diagram;
         if (!diagram) continue;
-        const location = `${id}.md, step ${index + 1}`;
         if (diagram.type === 'custom' && !manifest.extension) {
           throw new Error(`${location}: set extension in content/course.json for custom diagrams`);
+        }
+        if (diagram.type === 'custom' && validators.diagrams && Object.hasOwn(validators.diagrams, diagram.name)) {
+          validateData(validators.diagrams[diagram.name], diagram.data, `${location}, diagram "${diagram.name}"`);
         }
         if (diagram.src) requireAsset(diagram.src, files, location);
         if (diagram.source) {
@@ -152,7 +221,7 @@ export async function readProject(directory = '.') {
     chapters.push({ ...chapter, lessons });
   }
 
-  const { $schema, ...course } = manifest;
+  const { $schema, dataSchema, ...course } = manifest;
   return { course: { ...course, chapters }, files };
 }
 

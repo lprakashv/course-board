@@ -25,6 +25,10 @@
     "description": {
       "$ref": "#/definitions/text"
     },
+    "dataSchema": {
+      "type": "string",
+      "pattern": "\\.json$"
+    },
     "theme": {
       "type": "string",
       "pattern": "\\.css$"

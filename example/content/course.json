@@ -6,6 +6,7 @@
   "description": "Follow the data on each request.",
   "theme": "theme.css",
   "extension": "extensions.js",
+  "dataSchema": "data-schema.json",
   "chapters": [
     { "title": "Read paths", "lessons": ["read-through-a-cache", "measure-the-hit-rate"] },
     { "title": "Write paths", "lessons": ["keep-data-current"] }
