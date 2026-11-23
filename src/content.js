@@ -149,7 +149,7 @@ export async function readProject(directory = '.') {
       }
       lessons.push(lesson);
     }
-    chapters.push({ title: chapter.title, lessons });
+    chapters.push({ ...chapter, lessons });
   }
 
   const { $schema, ...course } = manifest;

@@ -3,36 +3,104 @@
   "title": "Course Board manifest",
   "type": "object",
   "additionalProperties": false,
-  "required": ["version", "id", "title", "chapters"],
+  "required": [
+    "version",
+    "id",
+    "title",
+    "chapters"
+  ],
   "properties": {
-    "$schema": { "type": "string" },
-    "version": { "const": 1 },
-    "id": { "$ref": "#/definitions/id" },
-    "title": { "$ref": "#/definitions/text" },
-    "description": { "$ref": "#/definitions/text" },
-    "theme": { "type": "string", "pattern": "\\.css$" },
-    "extension": { "type": "string", "pattern": "\\.m?js$" },
+    "$schema": {
+      "type": "string"
+    },
+    "version": {
+      "const": 1
+    },
+    "id": {
+      "$ref": "#/definitions/id"
+    },
+    "title": {
+      "$ref": "#/definitions/text"
+    },
+    "description": {
+      "$ref": "#/definitions/text"
+    },
+    "theme": {
+      "type": "string",
+      "pattern": "\\.css$"
+    },
+    "extension": {
+      "type": "string",
+      "pattern": "\\.m?js$"
+    },
     "chapters": {
       "type": "array",
       "minItems": 1,
       "items": {
         "type": "object",
         "additionalProperties": false,
-        "required": ["title", "lessons"],
+        "required": [
+          "title",
+          "lessons"
+        ],
         "properties": {
-          "title": { "$ref": "#/definitions/text" },
+          "title": {
+            "$ref": "#/definitions/text"
+          },
           "lessons": {
             "type": "array",
             "minItems": 1,
             "uniqueItems": true,
-            "items": { "$ref": "#/definitions/id" }
+            "items": {
+              "$ref": "#/definitions/id"
+            }
+          },
+          "data": {
+            "type": "object",
+            "additionalProperties": {
+              "$ref": "#/definitions/jsonValue"
+            }
           }
         }
       }
     }
   },
   "definitions": {
-    "id": { "type": "string", "pattern": "^[a-z0-9]+(?:-[a-z0-9]+)*$" },
-    "text": { "type": "string", "pattern": "\\S" }
+    "id": {
+      "type": "string",
+      "pattern": "^[a-z0-9]+(?:-[a-z0-9]+)*$"
+    },
+    "text": {
+      "type": "string",
+      "pattern": "\\S"
+    },
+    "jsonValue": {
+      "anyOf": [
+        {
+          "type": "null"
+        },
+        {
+          "type": "boolean"
+        },
+        {
+          "type": "number"
+        },
+        {
+          "type": "string"
+        },
+        {
+          "type": "array",
+          "items": {
+            "$ref": "#/definitions/jsonValue"
+          }
+        },
+        {
+          "type": "object",
+          "additionalProperties": {
+            "$ref": "#/definitions/jsonValue"
+          }
+        }
+      ]
+    }
   }
 }

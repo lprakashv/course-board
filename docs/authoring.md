@@ -147,3 +147,24 @@ console.log(course.title);
 Use `parseLesson(source, id)` to compile one document. Use `buildSite(projectDirectory)` to build a complete site into that project's `dist/`.
 
 Import `renderDiagram` from `@lprakashv/course-board/diagrams` in a bundler project. Set `assetBase` to the relative URL prefix for diagram files if it differs from `./media/`. For a native module site with no bundler, use `npm exec -- course-board vendor path/to/diagrams.js` and import the copied file with a relative URL. Use `copyDiagramRenderer(file)` for the same operation in a Node build script. [Existing-course examples](migrations.md).
+
+## Extend content and the shell
+
+A chapter, lesson, or step can contain a `data` mapping with JSON-compatible values. Use it for course-specific settings. Course Board validates the JSON values. A course must validate the meaning of its own settings.
+
+For a custom interface, call `buildSite(directory, { shell })` from a Node build script. The async `shell({ root, site, course })` function writes the complete site to `site`. `course` is the validated Course Board model. The function owns the HTML, assets, and course data it writes. If it fails, the previous `dist/` stays in place. Treat the shell as trusted code. The default shell remains unchanged when the option is omitted. For example:
+
+```js
+import { writeFile } from 'node:fs/promises';
+import { join } from 'node:path';
+import { buildSite } from '@lprakashv/course-board';
+
+await buildSite('.', {
+  shell: async ({ site, course }) => {
+    await writeFile(join(site, 'index.html'), '<h1>My course</h1>');
+    await writeFile(join(site, 'course.json'), JSON.stringify(course));
+  },
+});
+```
+
+Write any other assets that the interface needs inside `site`. The build publishes that directory as `dist/`.

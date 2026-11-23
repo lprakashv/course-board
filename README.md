@@ -55,3 +55,5 @@ A new course can use the full site builder. An existing app can import the conte
 Course Board uses native JavaScript modules so the existing courses can import the renderer without a browser bundler. Markdown-it and YAML match the authoring tools in Designed to Scale. Ajv validates the JSON Schema contracts. Eleventy and Astro content collections can build Markdown sites, but shared course steps and whiteboards would still need course-specific code. [Eleventy](https://www.11ty.dev/) · [Astro content collections](https://docs.astro.build/en/guides/content-collections/)
 
 [MIT License](LICENSE).
+
+Course authors can add structured `data` to chapters, lessons, and steps, or provide a custom build shell. See the [authoring guide](docs/authoring.md#extend-content-and-the-shell).

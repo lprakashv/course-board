@@ -109,3 +109,35 @@ test('direct links resolve steps and clamp numbers to lesson bounds', () => {
   assert.deepEqual(getRoute('#/second/20', lessons), { lesson: lessons[1], index: 1, step: 1 });
   assert.deepEqual(getRoute('#/unknown/8', lessons), { lesson: lessons[0], index: 0, step: 0 });
 });
+
+test('extension data is preserved and rejects non-JSON values', () => {
+  const source = ['---', 'title: Test', 'data: {nodes: [one, two]}', '---', '## Step',
+    '```step', 'data: {active: [0]}', '```', 'Prose.'].join('\n');
+  const lesson = parseLesson(source, 'test');
+  assert.deepEqual(lesson.data.nodes, ['one', 'two']);
+  assert.deepEqual(lesson.steps[0].data.active, [0]);
+  assert.throws(() => parseLesson(source.replace('[one, two]', '[.inf]'), 'test'), /nodes/);
+});
+
+test('a custom shell receives validated content and preserves the previous build on failure', async t => {
+  const path = await fixture(t);
+  const output = await buildSite(path, { shell: async ({ site, course }) => {
+    await writeFile(join(site, 'index.html'), course.chapters[0].lessons[0].title);
+  } });
+  const before = await readFile(join(output, 'index.html'), 'utf8');
+  assert.ok(before.length);
+  await assert.rejects(buildSite(path, { shell: async () => { throw new Error('shell failed'); } }), /shell failed/);
+  assert.equal(await readFile(join(output, 'index.html'), 'utf8'), before);
+});
+
+test('chapter extension data is validated and included in the course', async t => {
+  const path = await fixture(t);
+  const manifestPath = join(path, 'content/course.json');
+  const manifest = JSON.parse(await readFile(manifestPath, 'utf8'));
+  manifest.chapters[0].data = { color: 'green' };
+  await writeFile(manifestPath, JSON.stringify(manifest));
+  assert.deepEqual((await compileCourse(path)).chapters[0].data, { color: 'green' });
+  manifest.chapters[0].data = ['invalid'];
+  await writeFile(manifestPath, JSON.stringify(manifest));
+  await assert.rejects(compileCourse(path), /data/);
+});

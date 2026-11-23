@@ -3,9 +3,53 @@
   "title": "Course Board lesson front matter",
   "type": "object",
   "additionalProperties": false,
-  "required": ["title"],
+  "required": [
+    "title"
+  ],
   "properties": {
-    "title": { "type": "string", "pattern": "\\S" },
-    "summary": { "type": "string", "pattern": "\\S" }
+    "title": {
+      "type": "string",
+      "pattern": "\\S"
+    },
+    "summary": {
+      "type": "string",
+      "pattern": "\\S"
+    },
+    "data": {
+      "type": "object",
+      "additionalProperties": {
+        "$ref": "#/definitions/jsonValue"
+      }
+    }
+  },
+  "definitions": {
+    "jsonValue": {
+      "anyOf": [
+        {
+          "type": "null"
+        },
+        {
+          "type": "boolean"
+        },
+        {
+          "type": "number"
+        },
+        {
+          "type": "string"
+        },
+        {
+          "type": "array",
+          "items": {
+            "$ref": "#/definitions/jsonValue"
+          }
+        },
+        {
+          "type": "object",
+          "additionalProperties": {
+            "$ref": "#/definitions/jsonValue"
+          }
+        }
+      ]
+    }
   }
 }
