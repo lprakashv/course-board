@@ -237,3 +237,34 @@ test('chapter extension data is validated and included in the course', async t =
   await writeFile(manifestPath, JSON.stringify(manifest));
   await assert.rejects(compileCourse(path), /data/);
 });
+
+test('analytics are optional, configurable, and validated before replacing the build', async t => {
+  const path = await fixture(t);
+  const output = await buildSite(path, { analytics: {} });
+  let html = await readFile(join(output, 'index.html'), 'utf8');
+  assert.doesNotMatch(html, /googletagmanager|umami\.is|plausible\.init/);
+
+  await buildSite(path, { analytics: {
+    GOOGLE_TAG_ID: 'G-ABC123', UMAMI_WEBSITE_ID: '94db1cb1-74f4-4a40-ad6c-962362670409',
+    UMAMI_SCRIPT_URL: 'https://stats.example.com/script.js',
+    PLAUSIBLE_SCRIPT_URL: 'https://stats.example.com/js/pa-123.js',
+  } });
+  html = await readFile(join(output, 'index.html'), 'utf8');
+  assert.match(html, /gtag\/js\?id=G-ABC123/);
+  assert.match(html, /addEventListener\('hashchange'/);
+  assert.match(html, /data-website-id="94db1cb1-74f4-4a40-ad6c-962362670409"/);
+  assert.match(html, /hashBasedRouting: true/);
+  for (const analytics of [
+    { GOOGLE_TAG_ID: "G-X</script>" },
+    { UMAMI_WEBSITE_ID: 'invalid' },
+    { UMAMI_SCRIPT_URL: 'https://example.com/script.js' },
+    { PLAUSIBLE_SCRIPT_URL: 'javascript:alert(1)' },
+  ]) {
+    await assert.rejects(buildSite(path, { analytics }));
+    assert.equal(await readFile(join(output, 'index.html'), 'utf8'), html);
+  }
+  await buildSite(path, { analytics: { UMAMI_WEBSITE_ID: '94db1cb1-74f4-4a40-ad6c-962362670409' } });
+  html = await readFile(join(output, 'index.html'), 'utf8');
+  assert.match(html, /https:\/\/cloud\.umami\.is\/script\.js/);
+  assert.doesNotMatch(html, /googletagmanager|plausible\.init/);
+});

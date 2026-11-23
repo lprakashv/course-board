@@ -71,3 +71,19 @@ This workflow publishes the archive to [GitHub Releases](https://github.com/lpra
 3. In GitHub, open **Settings → Pages** and select **GitHub Actions** as the source. Commit the course files, package files, and workflow. Push them to the repository. [GitHub Pages workflow documentation](https://docs.github.com/en/pages/getting-started-with-github-pages/using-custom-workflows-with-github-pages)
 4. After the workflow succeeds, open the Pages URL shown in the deployment. Open the site with its trailing slash. Copy a step link, open it in a second tab, and confirm the step and its diagram load. The app uses relative assets and fragment routes for project paths such as `/my-course/`.
 5. If your account uses an existing custom domain for its user site, check the project URL under that domain. Preserve any existing Pages and domain settings when you adopt the package in an existing course. [GitHub custom domains](https://docs.github.com/en/pages/configuring-a-custom-domain-for-github-pages/managing-a-custom-domain-for-your-github-pages-site)
+
+## Add analytics to the default site
+
+Analytics is off by default. Set environment variables before `course-board build` or `course-board dev` to enable one or more providers. An empty variable disables that provider. Rebuild and deploy the site after a change. The production preview serves the last build.
+
+| Provider | Environment variables | Value |
+| --- | --- | --- |
+| Google Analytics | `GOOGLE_TAG_ID` | GA4 measurement ID, such as `G-ABC123` |
+| Umami | `UMAMI_WEBSITE_ID`, optional `UMAMI_SCRIPT_URL` | Website UUID and HTTPS tracker URL. The URL defaults to `https://cloud.umami.is/script.js`. |
+| Plausible | `PLAUSIBLE_SCRIPT_URL` | HTTPS script URL from the site's Plausible installation snippet. |
+
+For example, run `GOOGLE_TAG_ID=G-ABC123 npm run build` in a shell. The Node API also accepts `buildSite(directory, { analytics })`, where `analytics` is an object with the same variable names. This object replaces the environment settings for that build. The default shell includes the selected scripts before a `customize` callback runs. A custom `shell` owns its HTML and must add its own analytics.
+
+The Google integration records the initial page and sends a page view on each fragment change. Disable overlapping Google Analytics enhanced measurement for browser history changes if it also records these views. Plausible uses hash-based routing. Umami uses its tracker defaults; check your tracker version and dashboard for fragment navigation. Each provider can collect visitor data. Configure consent and privacy notices as needed for your site. IDs and script URLs are visible in the published HTML, even when supplied as GitHub secrets. Do not put private API keys in these settings.
+
+For GitHub Actions, add the values as repository secrets or variables under **Settings → Secrets and variables → Actions**. The supplied workflow maps secrets on the build step. To use a repository variable instead, replace `secrets.NAME` with `vars.NAME` in that mapping. Unset secrets resolve to an empty string. Pull requests from forks do not receive repository secrets, so their builds have analytics disabled. Other CI systems can provide the same environment variables. Check the provider's dashboard and browser network requests after deployment. [Google tag](https://developers.google.com/tag-platform/gtagjs) · [Umami tracker](https://docs.umami.is/docs/collect-data) · [Plausible tracker](https://plausible.io/docs/plausible-script)
