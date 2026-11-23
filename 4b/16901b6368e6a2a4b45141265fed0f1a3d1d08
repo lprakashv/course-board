@@ -1,0 +1,44 @@
+example/content/course.json
+  s_5b64bd2b522060::t_4cecbb518ac76b 9
+src/content.js
+  s_5b64bd2b522060::t_201640a2cb1e82 6,55,65-68,105-155,167,177-178,185,187-194,200-202,224
+src/browser/app.js
+  s_5b64bd2b522060::t_f2213d361f6fd1 27,53,71-74,106,166
+README.md
+  s_5b64bd2b522060::t_1aad89d68f2e3a 55
+schemas/manifest.json
+  s_5b64bd2b522060::t_201640a2cb1e82 28-31
+example/content/lessons/measure-the-hit-rate.md
+  s_5b64bd2b522060::t_4cecbb518ac76b 25-28
+docs/migrations.md
+  s_5b64bd2b522060::t_4cecbb518ac76b 127-132
+docs/authoring.md
+  s_5b64bd2b522060::t_1aad89d68f2e3a 57,91-105,168-187
+example/content/data-schema.json
+  s_5b64bd2b522060::t_4cecbb518ac76b 1-16
+src/browser/navigation.js
+  s_5b64bd2b522060::t_f2213d361f6fd1 2,6,10-13
+example/content/snippets/hit-rate.py
+  s_5b64bd2b522060::t_4cecbb518ac76b 1-3
+schemas/step.json
+  s_5b64bd2b522060::t_201640a2cb1e82 7-19
+test/course.test.js
+  s_5b64bd2b522060::t_4cecbb518ac76b 36-40,118-174
+  s_5b64bd2b522060::t_c56c52fbcceee3 175
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.7.5",
+  "base_commit_sha": "4b16901b6368e6a2a4b45141265fed0f1a3d1d08",
+  "prompts": {},
+  "sessions": {
+    "s_5b64bd2b522060": {
+      "agent_id": {
+        "tool": "codex",
+        "id": "01a20800-903c-7123-8725-0038a492723f",
+        "model": "gpt-6.2-sol"
+      },
+      "human_author": "Lalit Vatsal <lprakashv@gmail.com>"
+    }
+  }
+}
