@@ -1,0 +1,21 @@
+.github/workflows/ci.yml
+  s_ca5246ed41ee83::t_504bbecd8e2f0c 73-77
+docs/publishing.md
+  s_ca5246ed41ee83::t_bc576234f19f39 23
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.7.5",
+  "base_commit_sha": "2f2ede5fc9c0a1c2a18066ad8fe153fd7a757f8e",
+  "prompts": {},
+  "sessions": {
+    "s_ca5246ed41ee83": {
+      "agent_id": {
+        "tool": "codex",
+        "id": "01a207bc-aa91-7a21-898c-aa46af6e6a73",
+        "model": "gpt-6.1-terra"
+      },
+      "human_author": "Lalit Vatsal <lprakashv@gmail.com>"
+    }
+  }
+}
