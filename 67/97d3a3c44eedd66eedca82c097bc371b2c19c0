@@ -1,0 +1,33 @@
+docs/authoring.md
+  s_5b64bd2b522060::t_c69145bccef33b 155-159,162,165-167,170-184
+src/cli.js
+  s_5b64bd2b522060::t_c69145bccef33b 3-5,12-14,18-23,29-37,46,53
+test/preview.test.js
+  s_5b64bd2b522060::t_c69145bccef33b 1-78
+src/build.js
+  s_5b64bd2b522060::t_c69145bccef33b 19-47,57,59,61-62
+README.md
+  s_5b64bd2b522060::t_c69145bccef33b 54
+test/course.test.js
+  s_5b64bd2b522060::t_c69145bccef33b 129-130
+src/serve.js
+  s_5b64bd2b522060::t_c69145bccef33b 14,37
+docs/migrations.md
+  s_5b64bd2b522060::t_c69145bccef33b 117-126
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.7.5",
+  "base_commit_sha": "6797d3a3c44eedd66eedca82c097bc371b2c19c0",
+  "prompts": {},
+  "sessions": {
+    "s_5b64bd2b522060": {
+      "agent_id": {
+        "tool": "codex",
+        "id": "01a20800-903c-7123-8725-0038a492723f",
+        "model": "gpt-6.2-sol"
+      },
+      "human_author": "Lalit Vatsal <lprakashv@gmail.com>"
+    }
+  }
+}
