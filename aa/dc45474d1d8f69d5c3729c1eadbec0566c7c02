@@ -1,0 +1,29 @@
+test/course.test.js
+  s_2c86f2bb56ccc6::t_8606fd87879eb4 240-270
+docs/publishing.md
+  s_2c86f2bb56ccc6::t_cb892d25d59777 74-89
+README.md
+  s_2c86f2bb56ccc6::t_cb892d25d59777 68
+docs/github-pages.yml
+  s_2c86f2bb56ccc6::t_cb892d25d59777 26-30
+src/build.js
+  s_2c86f2bb56ccc6::t_6fa0124be4b0af 20-60,68-69,93-94,110
+src/browser/index.html
+  s_2c86f2bb56ccc6::t_6fa0124be4b0af 32
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.7.5",
+  "base_commit_sha": "aadc45474d1d8f69d5c3729c1eadbec0566c7c02",
+  "prompts": {},
+  "sessions": {
+    "s_2c86f2bb56ccc6": {
+      "agent_id": {
+        "tool": "codex",
+        "id": "01a2094b-710f-7a60-88e8-1faba0750d97",
+        "model": "gpt-6.1-terra"
+      },
+      "human_author": "Lalit Vatsal <lprakashv@gmail.com>"
+    }
+  }
+}
