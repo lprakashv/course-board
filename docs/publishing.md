@@ -20,7 +20,7 @@ Check the file list from the dry run. Expect source modules, schemas, example so
 
 ## 2. Publish a GitHub Release
 
-The [CI and release workflow](../.github/workflows/ci.yml) checks pull requests and pushes to `main`. A pushed version tag runs the same checks on Node.js 20.19 and 22. If both pass, the workflow packs the tagged source and attaches the `.tgz` to the GitHub Release. The tag must match the stable version in `package.json`.
+The [CI and release workflow](../.github/workflows/ci.yml) checks pull requests and pushes to `main`. A pushed version tag runs the same checks on Node.js 20.19 and 22. If both pass, the workflow packs the tagged source and attaches the `.tgz` to the GitHub Release. A successful push to `main` also captures the sample course and commits a refreshed screenshot to `docs/course-board.png`. The screenshot job needs write access to repository contents. The tag must match the stable version in `package.json`.
 
 1. Set the release version in `package.json` and update `package-lock.json` with `npm install --package-lock-only` when the version changes. Run the [local checks](#1-test-the-package-locally). Commit the version and release changes to `main`.
 2. Push the release commit before the tag. In this example, version `0.1.0` is already set. Use the actual release version for both tag commands.

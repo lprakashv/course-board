@@ -2,6 +2,12 @@
 
 Build a static course from Markdown. Put content in chapters, divide each lesson into steps, and add a whiteboard where it helps the learner. Course Board provides lesson search, direct step links, keyboard navigation, and progress saved in the browser.
 
+## Preview
+
+The example course shows lessons, step navigation, and a whiteboard. CI refreshes this screenshot after each push to `main`.
+
+![Course Board example](docs/course-board.png)
+
 ## Try the example
 
 Install Node.js 20.19 or later and npm. From the Course Board directory, run these commands.
@@ -43,7 +49,7 @@ A new course can use the full site builder. An existing app can import the conte
 | [`src/browser/`](src/browser/) | Static site and standalone diagram renderer |
 | [`example/`](example/) | Sample course with six diagram formats |
 | [`test/`](test/) | Compiler, renderer, navigation, and build tests |
-| [`.github/workflows/ci.yml`](.github/workflows/ci.yml) | Build checks and tagged GitHub Releases |
+| [`.github/workflows/ci.yml`](.github/workflows/ci.yml) | Build checks, README screenshot refresh, and tagged GitHub Releases |
 | [`AGENTS.md`](AGENTS.md) | Contributor and coding agent guidance |
 
 Course Board uses native JavaScript modules so the existing courses can import the renderer without a browser bundler. Markdown-it and YAML match the authoring tools in Designed to Scale. Ajv validates the JSON Schema contracts. Eleventy and Astro content collections can build Markdown sites, but shared course steps and whiteboards would still need course-specific code. [Eleventy](https://www.11ty.dev/) · [Astro content collections](https://docs.astro.build/en/guides/content-collections/)
