@@ -30,6 +30,7 @@ test('the sample builds every diagram type into a static site', async t => {
   const output = await buildSite(path);
   const index = await readFile(join(output, 'index.html'), 'utf8');
   assert.match(index, /src="\.\/_board\/app.js"/);
+  assert.match(await readFile(join(output, '_board/browser-config.js'), 'utf8'), /export async function loadCourseConfig/);
   const built = JSON.parse(await readFile(join(output, 'course.json'), 'utf8'));
   assert.match(built.chapters[0].lessons[0].steps[0].html, /<code>product:42<\/code>/);
   assert.equal(built.chapters[0].lessons[0].steps[0].text, undefined);

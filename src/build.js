@@ -11,7 +11,7 @@ export async function copyDiagramRenderer(file) {
 export async function copyBrowserShell(directory) {
   const target = resolve(directory);
   await mkdir(target, { recursive: true });
-  for (const file of ['app.js', 'shell.js', 'navigation.js', 'diagrams.js']) {
+  for (const file of ['app.js', 'browser-config.js', 'shell.js', 'navigation.js', 'diagrams.js']) {
     await copyFile(new URL(`./browser/${file}`, import.meta.url), join(target, file));
   }
 }

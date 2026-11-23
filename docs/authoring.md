@@ -222,3 +222,22 @@ For an existing full-site callback, use `buildSite(directory, { shell })`. The c
 The default shell entry point can start a trusted interface adapter. This lets an existing course keep its HTML, styles, routes, and stored settings while using the same shell lifecycle and storage helpers as the default interface. The adapter owns its interface and event handlers; Course Board does not translate them automatically.
 
 Run `course-board vendor-shell site/src/vendor` to copy the default entry point and its browser modules. Load it with `<script type="module" src="./src/vendor/app.js" data-course-board-adapter="../app.js"></script>`. The adapter path is relative to the copied entry point. In the adapter, import `createCourseShell` from `./vendor/shell.js`. Pass `readRoute` and the existing `storageKey`, then call `readState`, `writeState`, and `start({ render, onNavigate })`. `start` renders once and calls `onNavigate` on a hash change; it returns a cleanup function. State remains at the supplied key and storage failures are ignored. The normal Course Board interface still starts when the adapter attribute is absent. The adapter runs as trusted code.
+
+### Load the shared browser configuration
+
+The default shell uses `loadCourseConfig()` at startup. Custom shells can call the same helper. Import it from `@lprakashv/course-board/browser-config` with a bundler, from `./_board/browser-config.js` in a staged site, or from the directory created by `vendor-shell`.
+
+```js
+import { loadCourseConfig } from './_board/browser-config.js';
+import { renderDiagram } from './_board/diagrams.js';
+
+const { course, asset, assetBase, extension } = await loadCourseConfig();
+const diagram = course.chapters[0].lessons[0].steps[0].diagram;
+const markup = renderDiagram(diagram, { assetBase, renderers: extension.diagrams });
+const download = diagram?.source ? asset(diagram.source) : undefined;
+```
+
+- Use `source` to pass a preloaded course object or the URL of a JSON model. The default is `./course.json`. The shell can validate or adapt its own model after loading it.
+- Use `assetBase` to set the media directory. The default is `./media/`. Relative paths use the document base, so the helper works when the site is published below a project path. `asset(path)` returns a validated, encoded URL for that directory.
+- If the course specifies `extension`, the helper imports that trusted module before rendering. The `extension` result is an empty object when the course has no extension.
+- If the course specifies `theme`, the helper appends its stylesheet and waits for it to load. If it fails, the shell can render with its base stylesheet. Each shell defines the styles and CSS properties it supports.

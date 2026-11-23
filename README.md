@@ -53,6 +53,7 @@ Open [the production preview](http://127.0.0.1:4174/). The build writes to `exam
 - [Create, write, and customize a course](docs/authoring.md)
 - [Use the same build and preview with a custom shell](docs/authoring.md#share-the-build-and-preview)
 - [Add stable step links and local code examples](docs/authoring.md#give-a-step-a-stable-link-and-a-code-example)
+- [Load the course model, theme, and extensions in a custom shell](docs/authoring.md#load-the-shared-browser-configuration)
 - [Publish a release artifact, publish to npm, or deploy a site to GitHub Pages](docs/publishing.md)
 - [Adopt it in DSA Blueprint and Designed to Scale](docs/migrations.md)
 - [Browse the example source](example/content/course.json)

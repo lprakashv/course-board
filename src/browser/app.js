@@ -1,4 +1,5 @@
-import { assetUrl, escapeHtml as text, renderDiagram } from './diagrams.js';
+import { escapeHtml as text, renderDiagram } from './diagrams.js';
+import { loadCourseConfig } from './browser-config.js';
 import { getRoute, lessonHref } from './navigation.js';
 import { createCourseShell } from './shell.js';
 
@@ -11,16 +12,7 @@ const main = $('lesson');
 let focusStep = false;
 
 try {
-  const response = await fetch('./course.json');
-  if (!response.ok) throw new Error('Could not read course.json.');
-  const course = await response.json();
-  const extension = course.extension ? await import(`../${assetUrl(course.extension)}`) : {};
-  if (course.theme) {
-    const link = document.createElement('link');
-    link.rel = 'stylesheet';
-    link.href = assetUrl(course.theme);
-    document.head.append(link);
-  }
+  const { course, asset, assetBase, extension } = await loadCourseConfig();
 
   const chapters = course.chapters;
   const lessons = chapters.flatMap(chapter => chapter.lessons.map(lesson => ({ ...lesson, chapter })));
@@ -83,7 +75,7 @@ try {
     if (spec) {
       let art;
       try {
-        art = renderDiagram(spec, { renderers: extension.diagrams });
+        art = renderDiagram(spec, { assetBase, renderers: extension.diagrams });
       } catch (error) {
         art = `<p role="alert">${text(error.message)}</p>`;
       }
@@ -92,7 +84,7 @@ try {
         <div class="diagram">${art}</div>
         ${spec.caption || spec.source ? `<figcaption>
           ${spec.caption ? `<span>${text(spec.caption)}</span>` : ''}
-          ${spec.source ? `<a href="${assetUrl(spec.source)}" download>Download scene</a>` : ''}
+          ${spec.source ? `<a href="${text(asset(spec.source))}" download>Download scene</a>` : ''}
         </figcaption>` : ''}
       </figure>`;
     }

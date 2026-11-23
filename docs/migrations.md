@@ -130,3 +130,10 @@ Use the customization module with both `course-board dev` and `course-board buil
 Add step IDs to published lessons in their current order. The default shell uses the IDs in new links. Keep numbered links valid by keeping the published order. Custom shells can read `step.id` and add named links to their own route parser.
 
 Add a `dataSchema` to check the custom fields that your adapter and renderers use. A schema checks the supplied data structure. Keep course checks that compare fields across lessons or check diagram relationships. To reuse a code example, put the file in `content/snippets/` and link it from a step block. Custom shells can render the compiled step HTML or use `step.snippet.text` separately. See the [authoring guide](authoring.md#extend-content-and-the-shell).
+
+## 7. Share browser configuration
+
+An adapter can use the [browser configuration helper](authoring.md#load-the-shared-browser-configuration) while keeping its routes and state.
+
+- **DSA Blueprint** can pass its generated model as `source` and use the returned extension and asset URLs. The helper applies the manifest theme before the first view.
+- **Designed to Scale** can set `source` to `./content/course.json`, then validate the returned model with its existing course checks.

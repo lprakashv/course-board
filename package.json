@@ -16,6 +16,7 @@
   },
   "exports": {
     ".": "./src/index.js",
+    "./browser-config": "./src/browser/browser-config.js",
     "./diagrams": "./src/browser/diagrams.js",
     "./schemas/manifest.json": "./schemas/manifest.json",
     "./schemas/lesson.json": "./schemas/lesson.json",
