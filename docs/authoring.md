@@ -123,6 +123,21 @@ If the stored value is valid, send it to the client.
 
 Raw HTML in the Markdown is rendered as text. Use ordinary Markdown for links, lists, code and tables. For a local Markdown image, link to its published location, for example `![A request flow](./media/diagrams/request.svg)`. The diagram schema validates assets in step blocks. Check ordinary Markdown links separately.
 
+### Show example state on the whiteboard
+
+In a step with a diagram, add `### Example state` and follow it with a Markdown table with two columns. Put a distinct label in the first column and its current value in the second. Use the same label in each step that tracks the same value.
+
+```markdown
+### Example state
+
+| Item | Value |
+| --- | --- |
+| Cache key | `product:42` |
+| Cache result | Hit |
+```
+
+The default shell shows these values above the diagram. When a reader moves between steps in the same lesson, it marks new or changed values and animates them briefly. The reader's reduced-motion setting turns off the animation.
+
 ### Give a step a stable link and a code example
 
 Add an optional ID and snippet to a step block.
@@ -157,10 +172,16 @@ Studio saves the scene and exports the SVG when you apply a board. If you edit a
 
 Set `"preset": "slate"` or `"preset": "night"` in the manifest to select a built-in style. The default is `classic`. Set `"theme": "theme.css"` and create `public/theme.css` to apply your own styles on top of the preset. Use `:root` to set the [CSS properties](../src/browser/course.css) for colors and fonts.
 
+The default shell loads the preset and stylesheet before the first paint. The **Theme** control lets readers select **Default**, **Light**, or **Dark**. The browser saves the choice for this course. An explicit choice uses the built-in colors unless the course stylesheet supplies colors under `:root[data-color-mode="light"]` or `:root[data-color-mode="dark"]`. Use these selectors to customize each choice. Diagram files can supply their own colors.
+
 ```css
 :root {
   --accent: #285c4a;
   --heading-font: Georgia, serif;
+}
+
+:root[data-color-mode="dark"] {
+  --accent: #b7cd94;
 }
 ```
 
@@ -178,6 +199,8 @@ export const diagrams = {
 ```
 
 Use `diagram: { type: custom, name: queue-depth, alt: Four items are queued, data: { depth: 4 } }` in a `step` block. Use JSON-compatible values in `data`. The renderer receives the diagram, plus `asset(path)` and `escapeHtml(value)` helpers. Return an HTML string with an accessible label. Escape author-supplied text. A course can also export `onNavigate({ course, lesson, step })` for analytics or other navigation behavior. The hook receives a zero-based step index.
+
+On wide screens, the default shell gives the whiteboard most of the width. Drag the dividers to change the outline or reading width. With a divider in focus, press Left or Right to resize, or Home or End to set its minimum or maximum width. The browser saves these widths. On narrow screens, the board sits above the reading pane. The shell prepares file-based boards for the previous and next steps so that navigation can reuse them.
 
 Extensions run as trusted browser code. Use `textContent` for dynamic text inside a custom element, or use `escapeHtml` when you return markup. The build validates the extension path and renderer name syntax. The browser looks up the exported renderer when the step opens. All files in `public/` become public.
 

@@ -2,6 +2,8 @@
 
 DSA Blueprint and Designed to Scale now use Course Board. Their repositories are the source of truth for their current integration. The steps below are an earlier renderer-only migration example; their commands and file names can differ from the current courses.
 
+Both courses pin Course Board in `package.json` and `package-lock.json`. To deploy learner shell changes, update the pin in each course and rebuild it. The shared shell supplies the pane dividers and theme control. It also displays the existing **Example state** tables inside the whiteboard. The course can keep its preset, theme stylesheet, and diagram files.
+
 Start by sharing the diagram renderer. Each course can adopt it inside its current app and publish through its existing GitHub Pages workflow. Use the existing renderer as a Course Board `custom` renderer. Its markup still feeds the course's diagram controls and animations.
 
 The steps below assume the local repositories are named `coding-interview-patterns` and `designed-to-scale`. The DSA Blueprint checkout is named `coding-interview-patterns`, and its remote is `lprakashv/dsa-blueprint`. Use a branch in each repository for the change.

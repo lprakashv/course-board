@@ -35,7 +35,7 @@ test('browser shell modules can be vendored for an existing course', async t => 
   const path = await mkdtemp(join(tmpdir(), 'course-shell-vendor-'));
   t.after(() => rm(path, { recursive: true, force: true }));
   await copyBrowserShell(path);
-  for (const file of ['app.js', 'shell.js', 'navigation.js', 'diagrams.js']) {
+  for (const file of ['app.js', 'shell.js', 'navigation.js', 'diagrams.js', 'panes.js']) {
     assert.ok((await readFile(join(path, file), 'utf8')).length > 0);
   }
 });
