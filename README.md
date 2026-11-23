@@ -1,6 +1,6 @@
 # <img src="src/browser/favicon.svg" alt="" width="36" height="36"> Course Board
 
-Build a static course from Markdown. Import a course bundle from the CLI or use Course Board Studio to write lessons and draw whiteboards with Excalidraw. Learners get lesson search, direct step links, keyboard navigation, and progress saved in the browser.
+Build a static course from Markdown. Import a course bundle from the CLI or use Course Board Studio to write lessons and draw whiteboards with Excalidraw. Learners get lesson search, direct step links, keyboard navigation, resizable panes on wide screens, and light and dark themes. Whiteboards can show which example values change from step to step. The browser saves progress and display preferences.
 
 [👀 Preview](#preview) · [🚀 Try the example](#try-the-example) · [📚 Read the guides](#use-course-board-in-a-project)
 
@@ -14,7 +14,7 @@ The example course shows lessons, step navigation, and a whiteboard. CI refreshe
 
 ## Courses built with Course Board
 
-These courses use Course Board with their own shells and diagrams. CI builds both source repositories and refreshes their screenshots after a successful push to `main`. The screenshots appear after the first successful showcase run.
+These courses use the shared learner shell with their own lessons and diagrams. CI builds both source repositories and refreshes their screenshots after a successful push to `main`. The screenshots appear after the first successful showcase run.
 
 | Course | Site | Source |
 | --- | --- | --- |

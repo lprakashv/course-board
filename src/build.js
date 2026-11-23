@@ -1,5 +1,6 @@
-import { copyFile, mkdir, mkdtemp, rename, rm, writeFile } from 'node:fs/promises';
+import { copyFile, mkdir, mkdtemp, readFile, rename, rm, writeFile } from 'node:fs/promises';
 import { dirname, join, resolve } from 'node:path';
+import { assetUrl, escapeHtml } from './browser/diagrams.js';
 import { readProject } from './content.js';
 
 export async function copyDiagramRenderer(file) {
@@ -11,7 +12,7 @@ export async function copyDiagramRenderer(file) {
 export async function copyBrowserShell(directory) {
   const target = resolve(directory);
   await mkdir(target, { recursive: true });
-  for (const file of ['app.js', 'shell.js', 'navigation.js', 'diagrams.js']) {
+  for (const file of ['app.js', 'shell.js', 'navigation.js', 'diagrams.js', 'panes.js']) {
     await copyFile(new URL(`./browser/${file}`, import.meta.url), join(target, file));
   }
 }
@@ -19,7 +20,13 @@ export async function copyBrowserShell(directory) {
 async function stageDefaultSite({ root, site, course }, files) {
   const browser = join(site, '_board');
   await copyBrowserShell(browser);
-  await copyFile(new URL('./browser/index.html', import.meta.url), join(site, 'index.html'));
+  const template = await readFile(new URL('./browser/index.html', import.meta.url), 'utf8');
+  const themeLink = course.theme
+    ? `<link rel="stylesheet" href="${escapeHtml(assetUrl(course.theme))}">` : '';
+  const attributes = `data-course-id="${escapeHtml(course.id)}" data-theme="${escapeHtml(course.preset ?? 'classic')}"`;
+  const index = template.replace('data-course-attributes', `${attributes}${course.theme ? ' data-custom-theme' : ''}`)
+    .replace('<!-- Custom theme -->', themeLink);
+  await writeFile(join(site, 'index.html'), index);
   for (const file of ['course.css', 'favicon.svg']) {
     await copyFile(new URL(`./browser/${file}`, import.meta.url), join(browser, file));
   }

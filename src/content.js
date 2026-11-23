@@ -70,10 +70,18 @@ export function parseLesson(source, id) {
     const start = hasMetadata ? fence.map[1] : heading.map[1];
     const prose = lines.slice(start, end).join('\n').trim();
     if (!prose) throw new Error(`${location}: add Markdown after the step heading`);
-    if (markdown.parse(prose, {}).some(token => token.type === 'fence' && token.info.trim() === 'step')) {
+    const env = {};
+    const proseTokens = markdown.parse(prose, env);
+    if (proseTokens.some(token => token.type === 'fence' && token.info.trim() === 'step')) {
       throw new Error(`${location}: put one step block directly after the heading`);
     }
-    return { title, text: prose, html: markdown.render(prose), ...settings };
+    if (settings.diagram) {
+      const state = proseTokens.find((token, i) => token.type === 'table_open' && token.level === 0 &&
+        proseTokens[i - 3]?.type === 'heading_open' && proseTokens[i - 3].tag === 'h3' &&
+        proseTokens[i - 2].content === 'Example state');
+      state?.attrSet('data-board-state', '');
+    }
+    return { title, text: prose, html: markdown.renderer.render(proseTokens, markdown.options, env), ...settings };
   });
   return { id, ...metadata, steps };
 }

@@ -23,6 +23,14 @@ A request asks for product 42. The service uses the product ID to form the key `
 
 A valid stored value gives you a **cache hit**.
 
+### Example state
+
+| Item | Value |
+| --- | --- |
+| Cache key | `product:42` |
+| Cache result | Checking |
+| Database reads | 0 |
+
 ## Return a hit
 
 ```step
@@ -38,6 +46,14 @@ On a hit, the service returns the cached value. This request does not use the da
 
 > **Assumption.** The cache entry has a valid lifetime when the service reads it.
 
+### Example state
+
+| Item | Value |
+| --- | --- |
+| Cache key | `product:42` |
+| Cache result | Hit |
+| Database reads | 0 |
+
 ## Fill a miss
 
 ```step
@@ -51,3 +67,11 @@ diagram:
 If the key is absent or expired, the service reads the database. This is a **cache miss**.
 
 The service stores a copy with an expiry time, then sends the value to the client.
+
+### Example state
+
+| Item | Value |
+| --- | --- |
+| Cache key | `product:42` |
+| Cache result | Miss |
+| Database reads | 1 |

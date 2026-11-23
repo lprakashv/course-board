@@ -30,8 +30,11 @@ test('the sample builds its diagrams and snippets into a static site', async t =
   const output = await buildSite(path);
   const index = await readFile(join(output, 'index.html'), 'utf8');
   assert.match(index, /src="\.\/_board\/app.js"/);
+  assert.match(index, /data-course-id="cache-fundamentals" data-theme="classic" data-custom-theme/);
+  assert.match(index, /<link rel="stylesheet" href="\.\/media\/theme\.css">/);
   const built = JSON.parse(await readFile(join(output, 'course.json'), 'utf8'));
   assert.match(built.chapters[0].lessons[0].steps[0].html, /<code>product:42<\/code>/);
+  assert.match(built.chapters[0].lessons[0].steps[0].html, /<table data-board-state="">/);
   assert.equal(built.chapters[0].lessons[0].steps[0].text, undefined);
   const snippetStep = built.chapters[0].lessons[1].steps[1];
   assert.equal(snippetStep.id, 'compare-windows');
@@ -45,6 +48,20 @@ test('the sample builds its diagrams and snippets into a static site', async t =
   const module = join(path, 'vendor/diagrams.mjs');
   await copyDiagramRenderer(module);
   assert.equal(typeof (await import(pathToFileURL(module))).renderDiagram, 'function');
+});
+
+test('the built page sets the course preset before the learner loads', async t => {
+  const path = await fixture(t);
+  const manifestPath = join(path, 'content/course.json');
+  const manifest = JSON.parse(await readFile(manifestPath, 'utf8'));
+  manifest.preset = 'slate';
+  delete manifest.theme;
+  await writeFile(manifestPath, JSON.stringify(manifest));
+
+  const output = await buildSite(path);
+  const index = await readFile(join(output, 'index.html'), 'utf8');
+  assert.match(index, /<html lang="en" data-course-id="cache-fundamentals" data-theme="slate">/);
+  assert.doesNotMatch(index, /\.\/media\/theme\.css/);
 });
 
 test('an invalid source preserves the previous build', async t => {
@@ -82,6 +99,18 @@ test('a lesson uses top-level headings and treats raw HTML as text', () => {
     /start the lesson/);
   assert.throws(() => parseLesson(source.replace('A <node> and **a value**.', 'Lead-in\n\n```step\n{}\n```'), 'test'),
     /directly after/);
+});
+
+test('only the example state table on a step with a diagram is marked for the whiteboard', () => {
+  const table = ['| Label | Value |', '| --- | --- |', '| Result | **Ready** |'].join('\n');
+  const source = ['---', 'title: Test lesson', '---', '## First', '```step',
+    'diagram: {type: ascii, alt: An arrow, text: "->"}', '```', '### Other values', '', table, '',
+    '### Example state', '', table, '', '## Second', '### Example state', '', table].join('\n');
+  const { steps } = parseLesson(source, 'test');
+  assert.match(steps[0].html, /<h3>Other values<\/h3>\n<table>/);
+  assert.match(steps[0].html, /<h3>Example state<\/h3>\n<table data-board-state="">/);
+  assert.match(steps[0].text, /\| Result \| \*\*Ready\*\* \|/);
+  assert.doesNotMatch(steps[1].html, /data-board-state/);
 });
 
 test('step metadata rejects unknown fields and wrong file types', () => {
