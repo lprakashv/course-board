@@ -156,18 +156,22 @@ In Studio, apply the board and save the course to save the scene and its SVG exp
 
 ## 6. Customize the theme or add a renderer
 
-Set `"preset": "slate"` or `"preset": "night"` in the manifest to select a built-in style. The default is `classic`. Set `"theme": "theme.css"` and create `public/theme.css` to apply your own styles on top of the preset. Use `:root` to set the [CSS properties](../src/browser/course.css) for colors and fonts.
+Set `"preset": "slate"` or `"preset": "night"` in the manifest to select a built-in style. The default is `classic`. All built-in presets use light blue accents.
+
+Set `"theme": "theme.css"` and create `public/theme.css` to apply your own styles on top of the preset. Use `:root` to set the [CSS properties](../src/browser/course.css) for colors and fonts. A custom theme uses `--accent` and `--accent-ink` for the background and text of primary buttons and active step numbers. Set `--accent-fill` and `--accent-fill-ink` to give them their own colors.
 
 The default shell loads the preset and stylesheet before the first paint. The **Theme** control lets readers select **Default**, **Light**, or **Dark**. The browser saves the choice for this course. An explicit choice uses the built-in colors unless the course stylesheet supplies colors under `:root[data-color-mode="light"]` or `:root[data-color-mode="dark"]`. Use these selectors to customize each choice. Diagram files can supply their own colors.
 
 ```css
 :root {
-  --accent: #285c4a;
+  --accent: #245f8c;
+  --accent-fill: #8fd0ff;
+  --accent-fill-ink: #192d43;
   --heading-font: Georgia, serif;
 }
 
 :root[data-color-mode="dark"] {
-  --accent: #b7cd94;
+  --accent: #8fd0ff;
 }
 ```
 
