@@ -1,0 +1,22 @@
+README.md
+  s_6b39d56acaba5c::t_18e63f8bab0bd8 1,5-7
+  s_6b39d56acaba5c::t_2cd5e098b03498 8
+docs/publishing.md
+  s_6b39d56acaba5c::t_18e63f8bab0bd8 25
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.7.5",
+  "base_commit_sha": "808edb1588a35d1780c34e2073a711d206a43f9f",
+  "prompts": {},
+  "sessions": {
+    "s_6b39d56acaba5c": {
+      "agent_id": {
+        "tool": "codex",
+        "id": "01a20801-e106-7c23-aa0e-49735a5b5097",
+        "model": "gpt-6.2-sol"
+      },
+      "human_author": "Lalit Vatsal <lprakashv@gmail.com>"
+    }
+  }
+}
