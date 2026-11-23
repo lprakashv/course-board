@@ -1,0 +1,31 @@
+docs/migrations.md
+  s_deaf370338024a::t_2c366b4f1fd87e 3-4
+README.md
+  s_deaf370338024a::t_c53afd670bb037 7,9
+  s_deaf370338024a::t_120a3bb7342b9a 11-22,53,66-67
+  s_deaf370338024a::t_658466bbc67727 10
+CONTRIBUTING.md
+  s_deaf370338024a::t_120a3bb7342b9a 1-23
+.github/workflows/showcase.yml
+  s_deaf370338024a::t_c53afd670bb037 23,39-41,82,85
+  s_deaf370338024a::t_313e728f8ba7b6 1-22,24-38,42-81,83-84,86-91
+docs/publishing.md
+  s_deaf370338024a::t_c53afd670bb037 25
+  s_deaf370338024a::t_120a3bb7342b9a 23-24,26-29
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.7.5",
+  "base_commit_sha": "7e7d91c0e36e9f2ec00a468c9305087136cd86a4",
+  "prompts": {},
+  "sessions": {
+    "s_deaf370338024a": {
+      "agent_id": {
+        "tool": "codex",
+        "id": "01a207f4-764b-7410-b6ed-6ada7c9bb0fb",
+        "model": "gpt-6.1-terra"
+      },
+      "human_author": "Lalit Vatsal <lprakashv@gmail.com>"
+    }
+  }
+}
