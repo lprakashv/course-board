@@ -70,13 +70,16 @@ jobs:
         run: |
           git config user.name 'github-actions[bot]'
           git config user.email '41898282+github-actions[bot]@users.noreply.github.com'
+          git fetch origin main
+          if [ "$(git rev-parse HEAD)" != "$(git rev-parse origin/main)" ]; then
+            echo 'Main changed after the screenshot was captured; skipping this refresh.'
+            exit 0
+          fi
           git add docs/course-board.png
           if git diff --cached --quiet; then
             echo 'The README screenshot is already current.'
             exit 0
           fi
-          git fetch origin main
-          git pull --rebase origin main
           git commit -m 'Refresh README course screenshot'
           git push origin HEAD:main
 
