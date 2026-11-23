@@ -268,3 +268,16 @@ test('analytics are optional, configurable, and validated before replacing the b
   assert.match(html, /https:\/\/cloud\.umami\.is\/script\.js/);
   assert.doesNotMatch(html, /googletagmanager|plausible\.init/);
 });
+
+test('a Google tag container uses the container snippet without duplicate page views', async t => {
+  const path = await fixture(t);
+  const output = await buildSite(path, { analytics: { GOOGLE_TAG_ID: 'GTM-EXAMPLE1' } });
+  const html = await readFile(join(output, 'index.html'), 'utf8');
+  assert.match(html, /https:\/\/www\.googletagmanager\.com\/gtm\.js\?id=GTM-EXAMPLE1/);
+  assert.match(html, /gtag\('js', new Date\(\)\)/);
+  assert.doesNotMatch(html, /gtag\/js\?|gtag\('config'|gtag\('event'|addEventListener\('hashchange'/);
+  for (const id of ['GTM-', 'GTM-ABC</script>', 'AW-123']) {
+    await assert.rejects(buildSite(path, { analytics: { GOOGLE_TAG_ID: id } }), /GOOGLE_TAG_ID/);
+    assert.equal(await readFile(join(output, 'index.html'), 'utf8'), html);
+  }
+});
