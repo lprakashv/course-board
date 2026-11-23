@@ -52,11 +52,13 @@ To create a separate course, follow the [authoring guide](docs/authoring.md). It
 | --- | --- |
 | Authors | Markdown lessons with ordered chapters and steps; JSON Schema validation; CLI import; local Studio editor; code snippets and stable step IDs |
 | Whiteboards | ASCII, images, SVG, Excalidraw, sandboxed HTML, and custom diagrams; optional captions and example-state changes |
-| Learners | Lesson search, step links, previous and next navigation, arrow-key navigation, completion tracking, and a responsive layout |
+| Learners | A course index, a Home link, lesson search, step links, previous and next navigation, arrow-key navigation, completion tracking, and a responsive layout |
 | Display | Classic, Slate, and Night presets with light blue accents; reader-selected light and dark modes; resizable desktop panes; reduced-motion support |
 | Developers | Static builds, local preview, Node compiler and build APIs, browser renderer and shell exports, and GitHub Pages deployment |
 
 Progress and display preferences are stored in the learner's browser. They do not sync across devices.
+
+The generated page uses the course title and description for social previews. Step links share the course preview because they use fragment routes. Social sites may cache an earlier preview.
 
 ## Customization
 

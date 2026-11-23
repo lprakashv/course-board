@@ -67,7 +67,11 @@ async function stageDefaultSite({ root, site, course }, files, analytics) {
   const themeLink = course.theme
     ? `<link rel="stylesheet" href="${escapeHtml(assetUrl(course.theme))}">` : '';
   const attributes = `data-course-id="${escapeHtml(course.id)}" data-theme="${escapeHtml(course.preset ?? 'classic')}"`;
+  const title = escapeHtml(course.title);
+  const description = course.description ? escapeHtml(course.description) : '';
+  const metadata = `<title>${title}</title>\n  <meta property="og:title" content="${title}">\n  <meta name="twitter:title" content="${title}">${description ? `\n  <meta name="description" content="${description}">\n  <meta property="og:description" content="${description}">\n  <meta name="twitter:description" content="${description}">` : ''}`;
   const index = template.replace('data-course-attributes', `${attributes}${course.theme ? ' data-custom-theme' : ''}`)
+    .replace('<!-- Course metadata -->', metadata)
     .replace('<!-- Custom theme -->', themeLink)
     .replace('<!-- Analytics -->', analyticsMarkup(analytics));
   await writeFile(join(site, 'index.html'), index);
