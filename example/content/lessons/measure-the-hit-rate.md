@@ -22,6 +22,10 @@ Count each cache lookup as a hit or a miss. Divide the number of hits by the tot
 ## Compare two time windows
 
 ```step
+id: compare-windows
+snippet:
+  src: hit-rate.py
+  language: python
 diagram:
   type: custom
   name: hit-rate

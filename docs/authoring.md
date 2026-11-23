@@ -48,10 +48,11 @@ npm exec -- course-board dev my-course
 ```
 
 - `manifest` uses the same format as `content/course.json`. It lists chapter titles and lesson IDs in order.
-- `lessons` contains one object per listed ID. Each lesson has a `title` and `steps`, and can have `summary` and `data`. Each step has a `title` and Markdown `text`, and can have `diagram` and `data`. Use `###` or lower for headings inside step text.
+- `lessons` contains one object per listed ID. Each lesson has a `title` and `steps`, and can have `summary` and `data`. Each step has a `title` and Markdown `text`, and can have `id`, `diagram`, `snippet`, and `data`. Use `###` or lower for headings inside step text.
 - `assets` maps a path in the course's `public/` directory to a file path relative to the bundle. Use the destination path in a diagram, theme, or extension. For an Excalidraw board, map the SVG export as `src` and the optional `.excalidraw` file as `source`.
+- `contentFiles` maps a path in `content/` to a file path relative to the bundle. Use it to copy the file referenced by `manifest.dataSchema` or a code file referenced by a step. For example, map `snippets/cache/lookup.py` for a step with `"snippet": { "src": "cache/lookup.py", "language": "python" }`. You can omit the mapping for a file that is already in the course.
 
-The import creates `content/course.json`, `content/lessons/<id>.md`, and any mapped `public/` files. Use `.` as the target to import into the current directory. The bundle supplies the full course outline. A repeat import updates listed lessons and mapped assets. Unlisted files stay on disk. The compiler checks the result before the import replaces course files.
+The import creates `content/course.json`, `content/lessons/<id>.md`, and any mapped files. Use `.` as the target to import into the current directory. The bundle supplies the full course outline. A repeat import updates listed lessons and mapped files. Unlisted files stay on disk. The compiler checks the result before the import replaces course files.
 
 ## Edit a course in the browser
 
@@ -65,6 +66,7 @@ node src/cli.js author /path/to/my-course
 Open [Course Board Studio](http://127.0.0.1:4175/). You can also open a new directory to start a course. Add at least one chapter, lesson, and step, then select **Save course**. Use the course preview on port 4173 to read the saved course. Set `PORT` before the `author` command to use a different Studio port.
 
 - Use the outline to add and edit chapters and lessons. Use Markdown for step text and the step order controls to set the reading order.
+- Studio preserves existing step IDs and snippet references. Edit these fields in the lesson's step block. Edit the referenced schema and snippet files in `content/`.
 - Attach an image, SVG, or standalone HTML board to a step, or select **Open whiteboard** to draw with Excalidraw. In the editor, select **Import scene** to open a `.excalidraw` file. Use **Apply board** to prepare the scene and its SVG export. Save the course to write both files into `public/diagrams/`.
 - Use **Course settings** to select a built-in style or attach a CSS file. Studio saves uploaded files under `public/`. A saved file is available in the static build.
 
@@ -87,7 +89,7 @@ Edit `content/course.json`. The chapter list and its lesson ID lists set the ord
 ```
 
 - Use lowercase letters, digits, and single hyphens in course and lesson IDs. Each lesson ID must be unique within a course.
-- Use `content/lessons/<id>.md` for each lesson. Keep IDs and step order stable after publication. Direct links use `#/<id>/<step-number>`, with step numbers starting at 1.
+- Use `content/lessons/<id>.md` for each lesson. Numbered links use `#/<id>/<step-number>`, with step numbers starting at 1. Keep published order stable for readers who use these links.
 - Use `theme` and `extension` to reference optional files in `public/`. The files are copied to `dist/media/`.
 
 ## 4. Write one Markdown file per lesson
@@ -120,6 +122,21 @@ If the stored value is valid, send it to the client.
 ````
 
 Raw HTML in the Markdown is rendered as text. Use ordinary Markdown for links, lists, code and tables. For a local Markdown image, link to its published location, for example `![A request flow](./media/diagrams/request.svg)`. The diagram schema validates assets in step blocks. Check ordinary Markdown links separately.
+
+### Give a step a stable link and a code example
+
+Add an optional ID and snippet to a step block.
+
+```step
+id: lookup-key
+snippet:
+  src: cache/lookup.py
+  language: python
+```
+
+The ID starts with a lowercase letter and uses lowercase letters, digits, and single hyphens. Use each ID once per lesson. The default shell links to `#/cache-hit/lookup-key` when a step has this ID. The link follows the same step if it moves. Numbered links still use the current step order.
+
+Place the example at `content/snippets/cache/lookup.py`. Use a regular UTF-8 file and a path relative to `content/snippets/`. The compiler adds the escaped code below the step prose and supplies its original text as `step.snippet.text` to custom shells. The browser receives the rendered example through the course model.
 
 ## 5. Choose a diagram type
 
@@ -192,24 +209,57 @@ Import `renderDiagram` from `@lprakashv/course-board/diagrams` in a bundler proj
 
 ## Extend content and the shell
 
-A chapter, lesson, or step can contain a `data` mapping with JSON-compatible values. Use it for course-specific settings. Course Board validates the JSON values. A course must validate the meaning of its own settings.
+A chapter, lesson, or step can contain a `data` mapping with JSON-compatible values. Use it for course-specific settings. To validate the fields, set `"dataSchema": "data-schema.json"` in the manifest and place this JSON file in `content/`.
 
-For a custom interface, call `buildSite(directory, { shell })` from a Node build script. The async `shell({ root, site, course })` function writes the complete site to `site`. `course` is the validated Course Board model. The function owns the HTML, assets, and course data it writes. If it fails, the previous `dist/` stays in place. Treat the shell as trusted code. The default shell remains unchanged when the option is omitted. For example:
-
-```js
-import { writeFile } from 'node:fs/promises';
-import { join } from 'node:path';
-import { buildSite } from '@lprakashv/course-board';
-
-await buildSite('.', {
-  shell: async ({ site, course }) => {
-    await writeFile(join(site, 'index.html'), '<h1>My course</h1>');
-    await writeFile(join(site, 'course.json'), JSON.stringify(course));
+```json
+{
+  "step": {
+    "type": "object",
+    "properties": { "note": { "type": "string" } },
+    "additionalProperties": false
   },
-});
+  "diagrams": {
+    "queue-depth": {
+      "type": "object",
+      "required": ["depth"],
+      "properties": { "depth": { "type": "integer", "minimum": 0 } }
+    }
+  }
+}
 ```
 
-Write any other assets that the interface needs inside `site`. The build publishes that directory as `dist/`.
+Use optional `chapter`, `lesson`, and `step` keys for their `data` mappings and optional `diagrams` entries for custom renderers by name. Each entry is a standalone draft-07 JSON Schema. Use references within that schema. Course Board validates an empty object when the applicable `data` is absent. The compiler, build, and development preview report validation errors with the source location.
+
+### Share the build and preview
+
+Use the same customization module for production and development. Course Board validates the source and stages `index.html`, the browser files under `_board/`, the compiled browser model in `course.json`, assets from `public/` under `media/`, and `.nojekyll`. Then it calls the customization function. The function receives the absolute project path as `root`, the staging directory as `site`, and the validated model as `course`. The staged JSON keeps rendered step HTML. Use the callback model when you need the original step Markdown as well.
+
+Create `scripts/course-shell.mjs` with a default export. This example replaces the index with the course's own HTML.
+
+```js
+import { copyFile } from 'node:fs/promises';
+import { join } from 'node:path';
+
+export default async function customize({ root, site }) {
+  await copyFile(join(root, 'site/index.html'), join(site, 'index.html'));
+}
+```
+
+Write additional output to `site`. Use paths relative to the published index so the site works at the root and under a project path. For example, a custom index can load `./_board/app.js` with `data-course-board-adapter="../app.js"` if the callback stages an adapter as `app.js` at the site root.
+
+```sh
+course-board dev --customize scripts/course-shell.mjs
+course-board build --customize scripts/course-shell.mjs
+course-board preview
+```
+
+Run these as npm scripts or with `npm exec --`. The optional project directory comes after the command. Resolve a relative customization path from that directory. The module is trusted Node.js code and runs when you explicitly select it. In development, reload the page after edits to the course, public assets, or files that the callback reads. Restart the server after edits to the customization module or its Node.js imports. Production preview serves the last build.
+
+The Node API uses the same callback. Import it and call `buildSite(directory, { customize })`. A failure in the compiler or callback preserves the previous `dist/`.
+
+### Own the full build output
+
+For an existing full-site callback, use `buildSite(directory, { shell })`. The callback receives the same context and prepares all site files. Choose one callback for each build. Omitting both uses the default Course Board site.
 
 ## Adapt the default browser shell
 

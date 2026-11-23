@@ -28,6 +28,10 @@
     "preset": {
       "enum": ["classic", "slate", "night"]
     },
+    "dataSchema": {
+      "type": "string",
+      "pattern": "\\.json$"
+    },
     "theme": {
       "type": "string",
       "pattern": "\\.css$"

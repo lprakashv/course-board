@@ -48,7 +48,9 @@ export async function readDraft(root) {
     manifest,
     lessons: lessonList.map(lesson => ({
       ...lesson,
-      steps: lesson.steps.map(({ html, ...step }) => step),
+      steps: lesson.steps.map(({ html, snippet, ...step }) => snippet
+        ? { ...step, snippet: { src: snippet.src, language: snippet.language } }
+        : step),
     })),
   };
 }
@@ -82,6 +84,30 @@ function validateBundle(bundle) {
   for (const path of Object.keys(bundle.assets ?? {})) {
     if (!isAssetPath(path)) throw new Error(`Invalid public asset path "${path}".`);
   }
+  if (bundle.contentFiles) {
+    const references = new Set([bundle.manifest.dataSchema]);
+    for (const { steps } of bundle.lessons) {
+      for (const { snippet } of steps) {
+        if (snippet) references.add(`snippets/${snippet.src}`);
+      }
+    }
+    for (const path of Object.keys(bundle.contentFiles)) {
+      if (!isAssetPath(path) || path === 'course.json' || !references.has(path)) {
+        throw new Error(`Invalid content file path "${path}". Map only the course data schema and referenced snippets.`);
+      }
+    }
+  }
+}
+
+async function readBundleFiles(file, mapping = {}) {
+  const files = new Map();
+  for (const [target, path] of Object.entries(mapping)) {
+    if (isAbsolute(path)) throw new Error(`Use a path relative to the bundle for "${target}".`);
+    const source = resolve(dirname(file), path);
+    if (!(await lstat(source)).isFile()) throw new Error(`${source}: expected a regular file`);
+    files.set(target, await readFile(source));
+  }
+  return files;
 }
 
 export async function ingestBundle(file, directory) {
@@ -93,17 +119,12 @@ export async function ingestBundle(file, directory) {
     throw new Error(`${file}: ${error.message}`, { cause: error });
   }
   validateBundle(bundle);
-  const assets = new Map();
-  for (const [target, path] of Object.entries(bundle.assets ?? {})) {
-    if (isAbsolute(path)) throw new Error(`Use a path relative to the bundle for "${target}".`);
-    const source = resolve(dirname(file), path);
-    if (!(await lstat(source)).isFile()) throw new Error(`${source}: expected a regular file`);
-    assets.set(target, await readFile(source));
-  }
-  await saveDraft(directory, { manifest: bundle.manifest, lessons: bundle.lessons }, assets);
+  const assets = await readBundleFiles(file, bundle.assets);
+  const contentFiles = await readBundleFiles(file, bundle.contentFiles);
+  await saveDraft(directory, { manifest: bundle.manifest, lessons: bundle.lessons }, assets, { contentFiles });
 }
 
-export async function saveDraft(directory, draft, assets, { revision } = {}) {
+export async function saveDraft(directory, draft, assets, { revision, contentFiles = new Map() } = {}) {
   validateBundle(draft);
   const root = resolve(directory);
   const lock = join(root, '.course-board-author-lock');
@@ -135,17 +156,19 @@ export async function saveDraft(directory, draft, assets, { revision } = {}) {
     const lessons = join(staged, 'content/lessons');
     await mkdir(lessons, { recursive: true });
     const changes = [];
-    for (const [path, bytes] of assets) {
-      if (!isAssetPath(path)) throw new Error(`Invalid public asset path "${path}".`);
-      const relative = `public/${path}`;
-      const target = join(staged, relative);
-      await mkdir(dirname(target), { recursive: true });
-      if (await info(target)) {
-        if ((await readFile(target)).equals(bytes)) continue;
-        if (previous) throw new Error(`Asset "${path}" already exists with different content.`);
+    for (const [directory, files] of [['public', assets], ['content', contentFiles]]) {
+      for (const [path, bytes] of files) {
+        if (!isAssetPath(path)) throw new Error(`Invalid ${directory} file path "${path}".`);
+        const relative = `${directory}/${path}`;
+        const target = join(staged, relative);
+        await mkdir(dirname(target), { recursive: true });
+        if (await info(target)) {
+          if ((await readFile(target)).equals(bytes)) continue;
+          if (previous) throw new Error(`File "${relative}" already exists with different content.`);
+        }
+        await writeFile(target, bytes);
+        changes.push(relative);
       }
-      await writeFile(target, bytes);
-      changes.push(relative);
     }
     for (const lesson of draft.lessons) {
       if (isDeepStrictEqual(lesson, originals.get(lesson.id))) continue;

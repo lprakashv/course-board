@@ -23,6 +23,7 @@ test('CLI ingest stores an ordered course and assets for the static reader', asy
   assert.equal(run.status, 0, run.stderr);
   const course = await compileCourse(root);
   assert.equal(course.preset, 'slate');
+  assert.equal(course.chapters[0].lessons[0].steps[0].diagram.type, 'svg');
   assert.equal(course.chapters[0].lessons[0].steps[0].diagram.src, 'diagrams/cache-check.svg');
   const output = await buildSite(root);
   assert.match(await readFile(join(output, 'media/diagrams/cache-check.svg'), 'utf8'), /<svg/);
@@ -32,6 +33,47 @@ test('CLI ingest stores an ordered course and assets for the static reader', asy
   const file = join(root, 'invalid.json');
   await writeFile(file, JSON.stringify(bundle));
   await assert.rejects(ingestBundle(file, root), /Invalid public asset path/);
+});
+
+test('import and Studio preserve stable step IDs, snippet references, and data validation', async t => {
+  const root = await fixture(t);
+  const file = join(root, 'bundle.json');
+  const courseRoot = join(root, 'course');
+  const snippet = { src: 'example.py', language: 'python' };
+  const bundle = {
+    manifest: {
+      version: 1, id: 'sample', title: 'Sample', preset: 'night', dataSchema: 'data-schema.json',
+      chapters: [{ title: 'One', lessons: ['sample'] }],
+    },
+    lessons: [{ id: 'sample', title: 'Sample', steps: [
+      { id: 'run-example', title: 'Run the example', text: 'Read the output.', snippet, data: { count: 1 } },
+    ] }],
+    contentFiles: { 'data-schema.json': 'schema.json', 'snippets/example.py': 'example.py' },
+  };
+  await writeFile(file, JSON.stringify(bundle));
+  await writeFile(join(root, 'schema.json'), JSON.stringify({
+    step: { type: 'object', required: ['count'], properties: { count: { type: 'integer' } } },
+  }));
+  await writeFile(join(root, 'example.py'), 'print("<example>")\n');
+  await ingestBundle(file, courseRoot);
+
+  const { manifest, lessons, revision } = await readDraft(courseRoot);
+  const step = lessons[0].steps[0];
+  assert.equal(manifest.dataSchema, 'data-schema.json');
+  assert.equal(step.id, 'run-example');
+  assert.deepEqual(step.snippet, snippet);
+  step.text = 'Read the new output.';
+  step.data.count = 'one';
+  await assert.rejects(saveDraft(courseRoot, { manifest, lessons }, new Map(), { revision }), /count must be integer/);
+  step.data.count = 2;
+  const saved = await saveDraft(courseRoot, { manifest, lessons }, new Map(), { revision });
+  assert.deepEqual(saved.lessons, lessons);
+  const compiled = (await compileCourse(courseRoot)).chapters[0].lessons[0].steps[0];
+  assert.match(compiled.html, /&lt;example&gt;/);
+  assert.equal(compiled.snippet.text, 'print("<example>")\n');
+
+  await writeFile(join(courseRoot, 'content/snippets/example.py'), 'print("updated")\n');
+  await assert.rejects(saveDraft(courseRoot, { manifest, lessons }, new Map(), { revision: saved.revision }), /changed on disk/);
 });
 
 test('Studio saves a scene and its SVG and rejects invalid or stale edits', async t => {

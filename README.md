@@ -53,6 +53,8 @@ Open [the production preview](http://127.0.0.1:4174/). The build writes to `exam
 ## Use Course Board in a project
 
 - [Create, write, and customize a course](docs/authoring.md)
+- [Use the same build and preview with a custom shell](docs/authoring.md#share-the-build-and-preview)
+- [Add stable step links and local code examples](docs/authoring.md#give-a-step-a-stable-link-and-a-code-example)
 - [Publish a release artifact, publish to npm, or deploy a site to GitHub Pages](docs/publishing.md)
 - [Adopt it in DSA Blueprint and Designed to Scale](docs/migrations.md)
 - [Browse the example source](example/content/course.json)
@@ -68,7 +70,7 @@ A new course can use the full site builder. An existing interface can use the de
 | [`src/content.js`](src/content.js) | Markdown compiler and asset validation |
 | [`src/author/`](src/author/) | CLI import and local Course Board Studio |
 | [`src/browser/`](src/browser/) | Static site and standalone diagram renderer |
-| [`example/`](example/) | Sample course with six diagram formats |
+| [`example/`](example/) | Sample course and CLI import bundle |
 | [`test/`](test/) | Compiler, renderer, navigation, and build tests |
 | [`.github/workflows/ci.yml`](.github/workflows/ci.yml) | Build checks and tagged GitHub Releases |
 | [`.github/workflows/showcase.yml`](.github/workflows/showcase.yml) | Build the showcase courses and refresh their screenshots |

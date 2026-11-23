@@ -26,9 +26,11 @@
               "additionalProperties": false,
               "required": ["title", "text"],
               "properties": {
+                "id": { "$ref": "step.json#/properties/id" },
                 "title": { "type": "string", "pattern": "^[^\\r\\n]*\\S[^\\r\\n]*$" },
                 "text": { "$ref": "step.json#/definitions/text" },
                 "diagram": { "$ref": "step.json#/properties/diagram" },
+                "snippet": { "$ref": "step.json#/properties/snippet" },
                 "data": { "$ref": "step.json#/properties/data" }
               }
             }
@@ -37,6 +39,10 @@
       }
     },
     "assets": {
+      "type": "object",
+      "additionalProperties": { "type": "string", "minLength": 1 }
+    },
+    "contentFiles": {
       "type": "object",
       "additionalProperties": { "type": "string", "minLength": 1 }
     }

@@ -1,16 +1,19 @@
 #!/usr/bin/env node
 import { readdir } from 'node:fs/promises';
+import { resolve } from 'node:path';
+import { pathToFileURL } from 'node:url';
+import { parseArgs } from 'node:util';
 import { compileCourse, buildSite, copyBrowserShell, copyDiagramRenderer } from './index.js';
 import { serve } from './serve.js';
 
 const usage = `Usage: course-board <command> [path]
 
   check [directory]  Validate a course.
-  build [directory]  Build static files in dist/.
-  ingest <bundle.json> [directory]  Import course content and assets.
-  author [directory]  Edit a course in Studio (PORT defaults to 4175).
-  dev [directory]    Build on page reload (PORT defaults to 4173).
-  preview [directory]   Serve dist/ (PORT defaults to 4174).
+  build [directory] [--customize <module>]  Build static files in dist/.
+  ingest <bundle.json> [directory]          Import course content and assets.
+  author [directory]                       Edit a course in Studio (PORT defaults to 4175).
+  dev [directory] [--customize <module>]    Build on page reload (PORT defaults to 4173).
+  preview [directory]                      Serve dist/ (PORT defaults to 4174).
   vendor <file>      Copy the diagram renderer for a native ES module site.
   vendor-shell <directory>  Copy the default shell browser modules.`;
 
@@ -20,13 +23,26 @@ function getPort(fallback) {
   return port;
 }
 
-async function main([command, path, ...extra]) {
-  if (command === '--help' || command === '-h' || !command) {
+async function main(args) {
+  const { positionals: [command, path, ...extra], values } = parseArgs({
+    args, allowPositionals: true,
+    options: { help: { type: 'boolean', short: 'h' }, customize: { type: 'string' } },
+  });
+  if (values.help || !command) {
     console.log(usage);
     return;
   }
   if (extra.length > (command === 'ingest' ? 1 : 0)) throw new Error(usage);
   const directory = path ?? '.';
+  const options = {};
+  if (values.customize !== undefined) {
+    if ((command !== 'build' && command !== 'dev') || !values.customize) throw new Error(usage);
+    const module = await import(pathToFileURL(resolve(directory, values.customize)));
+    if (typeof module.default !== 'function') {
+      throw new TypeError(`${values.customize}: export a default customization function.`);
+    }
+    options.customize = module.default;
+  }
   switch (command) {
     case 'check': {
       const course = await compileCourse(directory);
@@ -35,7 +51,7 @@ async function main([command, path, ...extra]) {
       return;
     }
     case 'build':
-      console.log(`Built ${await buildSite(directory)}`);
+      console.log(`Built ${await buildSite(directory, options)}`);
       return;
     case 'ingest': {
       if (!path) throw new Error('Usage: course-board ingest <bundle.json> [directory]');
@@ -56,7 +72,7 @@ async function main([command, path, ...extra]) {
     case 'preview': {
       const port = getPort(command === 'dev' ? 4173 : 4174);
       if (command === 'preview') await readdir(`${directory}/dist`);
-      await serve(directory, { dev: command === 'dev', port });
+      await serve(directory, { dev: command === 'dev', port, ...options });
       return;
     }
     case 'vendor-shell':
