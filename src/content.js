@@ -5,7 +5,7 @@ import MarkdownIt from 'markdown-it';
 import { parseDocument } from 'yaml';
 import { escapeHtml, isAssetPath } from './browser/diagrams.js';
 
-async function loadSchema(name) {
+export async function loadSchema(name) {
   const url = new URL(`../schemas/${name}.json`, import.meta.url);
   return JSON.parse(await readFile(url, 'utf8'));
 }
@@ -16,7 +16,7 @@ const lessonSchema = ajv.compile(await loadSchema('lesson'));
 const stepSchema = ajv.compile(await loadSchema('step'));
 const markdown = new MarkdownIt({ html: false });
 
-function validate(schema, value, location) {
+export function validate(schema, value, location) {
   if (schema(value)) return;
   const details = schema.errors.map(error => {
     const property = error.params.additionalProperty ?? error.params.propertyName;
@@ -78,7 +78,7 @@ export function parseLesson(source, id) {
   return { id, ...metadata, steps };
 }
 
-async function publicFiles(directory) {
+export async function publicFiles(directory) {
   let entries;
   try {
     const info = await lstat(directory);
@@ -102,7 +102,7 @@ function requireAsset(path, files, location) {
   if (!files.has(path)) throw new Error(`${location}: asset "${path}" must be a file in public/`);
 }
 
-async function readLocalContent(root, path, location) {
+async function readLocalContent(root, path, location, sources) {
   if (!isAssetPath(path)) throw new Error(`${location}: invalid content path "${path}"`);
   try {
     let target = root;
@@ -114,15 +114,17 @@ async function readLocalContent(root, path, location) {
         throw new Error('expected a regular file in a directory without symbolic links');
       }
     }
-    return new TextDecoder('utf-8', { fatal: true }).decode(await readFile(target));
+    const source = new TextDecoder('utf-8', { fatal: true }).decode(await readFile(target));
+    sources?.set(path, source);
+    return source;
   } catch (error) {
     throw new Error(`${location}: cannot read content/${path}: ${error.message}`, { cause: error });
   }
 }
 
-async function dataValidators(root, path, location) {
+async function dataValidators(root, path, location, sources) {
   if (!path) return {};
-  const source = await readLocalContent(root, path, location);
+  const source = await readLocalContent(root, path, location, sources);
   try {
     const definitions = JSON.parse(source);
     if (!isObject(definitions) || Object.keys(definitions).some(key => !['chapter', 'lesson', 'step', 'diagrams'].includes(key))) {
@@ -153,8 +155,9 @@ function validateData(schema, data, location) {
   if (schema) validate(schema, data === undefined ? {} : data, location);
 }
 
-export async function readProject(directory = '.') {
+export async function readProject(directory = '.', { includeSources = false } = {}) {
   const root = resolve(directory);
+  const sources = includeSources ? new Map() : undefined;
   const manifestPath = join(root, 'content/course.json');
   const input = await readFile(manifestPath, 'utf8');
   let manifest;
@@ -164,7 +167,7 @@ export async function readProject(directory = '.') {
     throw new Error(`${manifestPath}: ${error.message}`, { cause: error });
   }
   validate(manifestSchema, manifest, manifestPath);
-  const validators = await dataValidators(root, manifest.dataSchema, manifestPath);
+  const validators = await dataValidators(root, manifest.dataSchema, manifestPath, sources);
 
   const publicRoot = join(root, 'public');
   const files = await publicFiles(publicRoot);
@@ -181,6 +184,7 @@ export async function readProject(directory = '.') {
       if (ids.has(id)) throw new Error(`${manifestPath}: duplicate lesson ID "${id}"`);
       ids.add(id);
       const source = await readFile(join(root, 'content', 'lessons', `${id}.md`), 'utf8');
+      sources?.set(`lessons/${id}.md`, source);
       const lesson = parseLesson(source, id);
       validateData(validators.lesson, lesson.data, `content/lessons/${id}.md`);
       for (const [index, step] of lesson.steps.entries()) {
@@ -188,7 +192,7 @@ export async function readProject(directory = '.') {
         validateData(validators.step, step.data, location);
         if (step.snippet) {
           const { src, language } = step.snippet;
-          const code = await readLocalContent(root, `snippets/${src}`, location);
+          const code = await readLocalContent(root, `snippets/${src}`, location, sources);
           step.snippet.text = code;
           step.html += `<pre><code class="language-${language}">${escapeHtml(code)}</code></pre>\n`;
         }
@@ -222,7 +226,7 @@ export async function readProject(directory = '.') {
   }
 
   const { $schema, dataSchema, ...course } = manifest;
-  return { course: { ...course, chapters }, files };
+  return { course: { ...course, chapters }, files, manifest, sources };
 }
 
 export async function compileCourse(directory = '.') {

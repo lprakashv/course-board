@@ -3,6 +3,12 @@ title: Keep Data Current
 summary: Remove an old cached value after a database write.
 ---
 
+## Choose an expiry time
+
+Use a shorter lifetime when values change often. Use a longer lifetime when values change less often and more cache hits are useful.
+
+asdasd
+
 ## Remove a stale copy
 
 ```step
@@ -18,6 +24,4 @@ Write the new value to the database. Then remove the old value from the cache. T
 
 > **Assumption.** This example has one writer and no concurrent reads between the write and removal.
 
-## Choose an expiry time
-
-Use a shorter lifetime when values change often. Use a longer lifetime when values change less often and more cache hits are useful.
+Sample text

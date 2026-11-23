@@ -19,12 +19,12 @@ async function fixture(t) {
   return path;
 }
 
-test('the sample builds every diagram type into a static site', async t => {
+test('the sample builds its diagrams and snippets into a static site', async t => {
   const path = await fixture(t);
   const course = await compileCourse(path);
   const lessons = course.chapters.flatMap(chapter => chapter.lessons);
   assert.deepEqual(lessons.flatMap(lesson => lesson.steps.map(step => step.diagram?.type).filter(Boolean)),
-    ['svg', 'ascii', 'html', 'image', 'custom', 'excalidraw']);
+    ['excalidraw', 'ascii', 'html', 'image', 'custom', 'excalidraw']);
   assert.match(lessons[0].steps[0].text, /product:42/);
 
   const output = await buildSite(path);
@@ -61,10 +61,12 @@ test('an invalid source preserves the previous build', async t => {
 
 test('assets must exist and must be regular files inside public', async t => {
   const path = await fixture(t);
-  const image = join(path, 'public/diagrams/cache-check.svg');
+  const course = await compileCourse(path);
+  const { src } = course.chapters[0].lessons[0].steps[0].diagram;
+  const image = join(path, 'public', src);
   await rm(image);
   await assert.rejects(compileCourse(path), /read-through-a-cache\.md, step 1: asset/);
-  await symlink(join(example, 'public/diagrams/cache-check.svg'), image);
+  await symlink(join(example, 'public', src), image);
   await assert.rejects(compileCourse(path), /expected a regular file/);
 });
 

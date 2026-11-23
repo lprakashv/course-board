@@ -10,11 +10,53 @@
   --sidebar: #192d26;
   --sidebar-text: #f0f3e9;
   --sidebar-muted: #b0c3b5;
+  --sidebar-active: #324b40;
+  --sidebar-highlight: #b7cd94;
+  --board-grid: #c7d4c7;
+  --board-bg: #edf2e9;
+  --accent-ink: #ffffff;
   --heading-font: Georgia, 'Times New Roman', serif;
   --body-font: system-ui, sans-serif;
   font-family: var(--body-font);
   background: var(--canvas);
   color: var(--ink);
+}
+
+:root:where([data-theme="slate"]) {
+  --canvas: #f2f5fa;
+  --paper: #ffffff;
+  --ink: #172a43;
+  --muted: #47617f;
+  --line: #ccd7e5;
+  --accent: #254f8f;
+  --accent-tint: #e4edf9;
+  --sidebar: #172942;
+  --sidebar-text: #edf4ff;
+  --sidebar-muted: #b9cbe4;
+  --sidebar-active: #2d4667;
+  --sidebar-highlight: #b6d9fd;
+  --board-grid: #bdcee3;
+  --board-bg: #eaf1fa;
+  --heading-font: system-ui, sans-serif;
+}
+
+:root:where([data-theme="night"]) {
+  color-scheme: dark;
+  --canvas: #141720;
+  --paper: #1e222e;
+  --ink: #eef0fb;
+  --muted: #b3bbd0;
+  --line: #42495e;
+  --accent: #bdbaff;
+  --accent-ink: #222039;
+  --accent-tint: #30334a;
+  --sidebar: #191b28;
+  --sidebar-text: #eef0fb;
+  --sidebar-muted: #b3bbd0;
+  --sidebar-active: #30334a;
+  --sidebar-highlight: #bdbaff;
+  --board-grid: #bfc4d3;
+  --board-bg: #e4e7ee;
 }
 
 * { box-sizing: border-box; }
@@ -62,7 +104,7 @@ a:focus-visible, button:focus-visible, input:focus-visible {
   place-items: center;
   width: 2.3rem;
   height: 2.3rem;
-  border: 1px solid #688578;
+  border: 1px solid var(--sidebar-muted);
   border-radius: .55rem;
 }
 .brand-mark svg { width: 1.45rem; }
@@ -75,7 +117,7 @@ a:focus-visible, button:focus-visible, input:focus-visible {
   align-items: center;
   margin-bottom: 1.6rem;
   padding: .58rem .66rem;
-  border: 1px solid #667d71;
+  border: 1px solid var(--sidebar-muted);
   border-radius: .5rem;
 }
 .search:focus-within { outline: 1px solid var(--sidebar-text); }
@@ -86,14 +128,14 @@ a:focus-visible, button:focus-visible, input:focus-visible {
 .chapter h2 { margin: 0 .55rem .45rem; color: var(--sidebar-muted); font-size: .7rem; font-weight: 650; letter-spacing: .11em; text-transform: uppercase; }
 .chapter ul { margin: 0; padding: 0; list-style: none; }
 .chapter a { display: flex; gap: .6rem; align-items: center; padding: .68rem .58rem; border-radius: .45rem; color: inherit; font-size: .89rem; text-decoration: none; }
-.chapter a:hover, .chapter a[aria-current] { background: #324b40; }
-.chapter a[aria-current] { box-shadow: inset 2px 0 #b7cd94; }
-.lesson-dot { display: grid; place-items: center; flex: 0 0 1rem; height: 1rem; border: 1px solid #91aa9a; border-radius: 50%; font-size: .69rem; }
-.lesson-dot.done { background: #b7cd94; border-color: #b7cd94; color: #172819; }
+.chapter a:hover, .chapter a[aria-current] { background: var(--sidebar-active); }
+.chapter a[aria-current] { box-shadow: inset 2px 0 var(--sidebar-highlight); }
+.lesson-dot { display: grid; place-items: center; flex: 0 0 1rem; height: 1rem; border: 1px solid var(--sidebar-muted); border-radius: 50%; font-size: .69rem; }
+.lesson-dot.done { background: var(--sidebar-highlight); border-color: var(--sidebar-highlight); color: var(--sidebar); }
 .empty { color: var(--sidebar-muted); margin: 0 .55rem; }
 .progress { margin-top: auto; padding: 1rem .4rem 0; }
 .progress p { display: flex; justify-content: space-between; margin: 0 0 .45rem; color: var(--sidebar-muted); font-size: .78rem; }
-progress { display: block; width: 100%; height: .45rem; accent-color: #b7cd94; }
+progress { display: block; width: 100%; height: .45rem; accent-color: var(--sidebar-highlight); }
 
 .workspace { min-width: 0; }
 .top { display: flex; justify-content: space-between; align-items: center; gap: 1rem; padding: 0 clamp(1.25rem, 4vw, 4rem); min-height: 4.2rem; border-bottom: 1px solid var(--line); color: var(--muted); font-size: .86rem; }
@@ -105,7 +147,7 @@ progress { display: block; width: 100%; height: .45rem; accent-color: #b7cd94; }
 .steps a { display: flex; gap: .45rem; align-items: center; padding: .4rem .66rem; border: 1px solid var(--line); border-radius: .42rem; color: var(--ink); font-size: .84rem; text-decoration: none; }
 .steps a span { display: grid; place-items: center; width: 1.35rem; height: 1.35rem; border-radius: 50%; color: var(--muted); font-size: .74rem; }
 .steps a:hover, .steps a[aria-current] { background: var(--accent-tint); border-color: var(--accent); }
-.steps a[aria-current] span { background: var(--accent); color: white; }
+.steps a[aria-current] span { background: var(--accent); color: var(--accent-ink); }
 .step-layout { display: grid; gap: 1.35rem; align-items: start; }
 .step-layout.has-board { grid-template-columns: minmax(0, .82fr) minmax(0, 1.18fr); }
 .reading, .board { min-width: 0; margin: 0; border: 1px solid var(--line); border-radius: .8rem; background: var(--paper); }
@@ -128,7 +170,7 @@ progress { display: block; width: 100%; height: .45rem; accent-color: #b7cd94; }
   overflow: auto;
   padding: 1rem;
   border-block: 1px solid var(--line);
-  background: radial-gradient(circle, #c7d4c7 1px, transparent 1px) 0 0 / 16px 16px, #edf2e9;
+  background: radial-gradient(circle, var(--board-grid) 1px, transparent 1px) 0 0 / 16px 16px, var(--board-bg);
 }
 .cb-image { display: block; max-width: 100%; max-height: 31rem; object-fit: contain; }
 .cb-ascii { max-width: 100%; overflow: auto; padding: 1rem; background: var(--paper); font: .88rem/1.55 ui-monospace, monospace; }
@@ -138,7 +180,7 @@ progress { display: block; width: 100%; height: .45rem; accent-color: #b7cd94; }
 .button, #outline-toggle { cursor: pointer; padding: .62rem .85rem; border: 1px solid var(--line); border-radius: .45rem; background: var(--paper); color: var(--ink); font-size: .88rem; font-weight: 600; text-decoration: none; }
 .button:hover, #outline-toggle:hover { background: var(--accent-tint); }
 .button:disabled { opacity: .6; cursor: default; }
-.button.primary { margin-left: auto; background: var(--accent); color: white; }
+.button.primary { margin-left: auto; background: var(--accent); color: var(--accent-ink); }
 .button.primary:hover { filter: brightness(.9); }
 .button.primary:focus-visible { outline-color: var(--accent); }
 .completion[aria-pressed="true"] { border-color: var(--accent); background: var(--accent-tint); }

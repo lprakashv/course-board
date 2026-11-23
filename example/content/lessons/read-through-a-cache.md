@@ -3,15 +3,18 @@ title: Read Through a Cache
 summary: Compare a cache hit with a cache miss and see when the service reads the database.
 ---
 
-## Check the cache
+## Check the cache first
 
 ```step
 diagram:
-  type: svg
-  src: diagrams/cache-check.svg
+  type: excalidraw
+  source: diagrams/4724692ed4bbc3f30536c1802e1094f6cad0cd7a03d35affc4dd4143073c909e.excalidraw
+  src: diagrams/e28abca053811e451d033d8865b74e8d97e56a3903963314e749250605b8bf22.svg
   alt: The service looks up product 42 in the cache. The database is idle.
   caption: The service checks the cache before it reads the database.
 ```
+
+First of all
 
 A request asks for product 42. The service uses the product ID to form the key `product:42`.
 
