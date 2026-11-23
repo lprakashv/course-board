@@ -1,0 +1,27 @@
+docs/publishing.md
+  s_115c815638cb29::t_9d53d71ff890d8 19,23,32,36-37
+docs/authoring.md
+  s_115c815638cb29::t_9d53d71ff890d8 10,16,22
+docs/migrations.md
+  s_115c815638cb29::t_9d53d71ff890d8 17,20
+package.json
+  s_115c815638cb29::t_d52de5591bd41b 3
+package-lock.json
+  s_115c815638cb29::t_cba4b7e1c93cbe 3,9
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.7.5",
+  "base_commit_sha": "de899a1ba2430e120f59cee083a837e7e09636fd",
+  "prompts": {},
+  "sessions": {
+    "s_115c815638cb29": {
+      "agent_id": {
+        "tool": "codex",
+        "id": "01a20973-2e8d-7540-b83a-7d3d4618210a",
+        "model": "gpt-6.1-terra"
+      },
+      "human_author": "Lalit Vatsal <lprakashv@gmail.com>"
+    }
+  }
+}
