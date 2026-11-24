@@ -1,0 +1,34 @@
+docs/publishing.md
+  s_b44d39566b8559::t_d4e08f353926c6 19
+  s_b44d39566b8559::t_5aef4c0d66ee1c 23,25-27
+README.md
+  s_b44d39566b8559::t_5aef4c0d66ee1c 97
+.github/workflows/ci.yml
+  s_b44d39566b8559::t_d618ebea09e31a 34,40,50,54-56,59-60,63-73,77,79,83,85-86
+package.json
+  s_b44d39566b8559::t_d4e08f353926c6 3
+AGENTS.md
+  s_b44d39566b8559::t_5aef4c0d66ee1c 58
+docs/authoring.md
+  s_b44d39566b8559::t_d4e08f353926c6 10,16,22
+docs/migrations.md
+  s_b44d39566b8559::t_d4e08f353926c6 17,20
+package-lock.json
+  s_b44d39566b8559::t_3cdbf6473375bf 3,9
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.7.5",
+  "base_commit_sha": "7cc91059153fad3950601aca8b69e7b2d52fcfc1",
+  "prompts": {},
+  "sessions": {
+    "s_b44d39566b8559": {
+      "agent_id": {
+        "tool": "codex",
+        "id": "01a20c49-757c-7160-8e8a-d0eb262ccfaa",
+        "model": "gpt-6.1-terra"
+      },
+      "human_author": "Lalit Vatsal <lprakashv@gmail.com>"
+    }
+  }
+}
