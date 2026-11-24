@@ -16,22 +16,15 @@ npm pack --dry-run
 npm pack
 ```
 
-Check the file list from the dry run. Expect source modules, schemas, example sources, and docs. The pack command creates `lprakashv-course-board-0.3.2.tgz`. Install it in a scratch course with the [authoring guide](authoring.md#1-install-course-board). A relative tarball path works while both projects are on the same machine. For CI, use a published GitHub Release URL, an npm release, or an archive committed inside the course repository. Commit the resulting lockfile. [npm pack documentation](https://docs.npmjs.com/cli/v11/commands/npm-pack/)
+Check the file list from the dry run. Expect source modules, schemas, example sources, and docs. The pack command creates `lprakashv-course-board-0.3.5.tgz`. Install it in a scratch course with the [authoring guide](authoring.md#1-install-course-board). A relative tarball path works while both projects are on the same machine. For CI, use a published GitHub Release URL, an npm release, or an archive committed inside the course repository. Commit the resulting lockfile. [npm pack documentation](https://docs.npmjs.com/cli/v11/commands/npm-pack/)
 
 ## 2. Publish a GitHub Release
 
-The [CI and release workflow](../.github/workflows/ci.yml) checks pull requests and pushes to `main`. A pushed version tag runs the same checks on Node.js 20.19 and 22. If both pass, the workflow packs the tagged source and attaches the `.tgz` to the GitHub Release. The tag must match the stable version in `package.json` at the tagged commit. A later version change does not change an existing tag. If a tag has the wrong package version, commit the corrected version and publish a new, unused version tag.
+The [CI and release workflow](../.github/workflows/ci.yml) checks pull requests and pushes to `main` on Node.js 20.19 and 22. After both checks pass on a push to `main`, it reads the stable version from `package.json`. If that version has no tag, the workflow creates the matching tag and GitHub Release for the tested commit. Existing tags are left in place.
 
-1. Set the release version in `package.json` and update `package-lock.json` with `npm install --package-lock-only` when the version changes. Run the [local checks](#1-test-the-package-locally). Commit the version and release changes to `main`.
-2. Push the release commit before the tag. In this example, version `0.3.2` is already set. Use the actual release version for both tag commands.
-
-   ```sh
-   git push origin main
-   git tag -a v0.3.2 -m "Release 0.3.2"
-   git push origin v0.3.2
-   ```
-
-3. In GitHub, check the **Course Board CI and Release** run for the tag. Then open **Releases** and check that the version has the expected `.tgz`. Download the archive and install it in a scratch project as in step 1. If the workflow stops during publishing, check the release and its assets before you retry the job. [GitHub Release CLI reference](https://cli.github.com/manual/gh_release_create)
+1. Choose a new version with no existing tag. Update `package.json`, `package-lock.json`, and the versioned examples in the guides. Run the [local checks](#1-test-the-package-locally).
+2. Merge the version change into `main` through a pull request. The workflow creates the tag and release after the checks pass.
+3. Check the **Course Board CI and Release** run for the push to `main`. Open **Releases** and check the archive. If publishing fails after the tag is created, check the tag and release before retrying. The workflow can complete a missing release when its tag points to the same commit. If a tag points to an earlier commit or a failed tag has the wrong version, choose a new version and merge it into `main`.
 
 This workflow publishes the archive to [GitHub Releases](https://github.com/lprakashv/course-board/releases). The npm registry and the course sites have their own publishing steps below.
 

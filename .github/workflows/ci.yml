@@ -31,13 +31,13 @@ jobs:
       - run: npm pack --dry-run
 
   release:
-    if: github.ref_type == 'tag'
+    if: github.event_name == 'push' && github.ref == 'refs/heads/main'
     needs: check
     runs-on: ubuntu-latest
     permissions:
       contents: write
     concurrency:
-      group: release-${{ github.ref }}
+      group: course-board-release
       cancel-in-progress: false
     steps:
       - uses: actions/checkout@v6
@@ -47,24 +47,40 @@ jobs:
         with:
           node-version: '22'
           package-manager-cache: false
-      - name: Pack the tagged version
+      - name: Prepare the release
         id: package
         shell: bash
         env:
-          RELEASE_TAG: ${{ github.ref_name }}
+          GH_TOKEN: ${{ github.token }}
+          GH_REPO: ${{ github.repository }}
+          RELEASE_COMMIT: ${{ github.sha }}
         run: |
           version=$(node -p "require('./package.json').version")
-          if [[ ! "$version" =~ ^[0-9]+\.[0-9]+\.[0-9]+$ || "$RELEASE_TAG" != "v$version" ]]; then
-            echo "Expected a stable package version with a matching tag. Package: $version. Tag: $RELEASE_TAG." >&2
+          if [[ ! "$version" =~ ^[0-9]+\.[0-9]+\.[0-9]+$ ]]; then
+            echo "Expected a stable package version. Package: $version." >&2
             exit 1
+          fi
+          tag="v$version"
+          refs=$(git ls-remote --tags origin "refs/tags/$tag" "refs/tags/$tag^{}")
+          tag_commit=$(printf '%s\n' "$refs" | awk '$2 ~ /\^\{\}$/ { print $1; found=1 } END { if (!found && NR > 0) print first } NR == 1 { first=$1 }')
+          if [[ -n "$tag_commit" && "$tag_commit" != "$RELEASE_COMMIT" ]]; then
+            echo "$tag already points to another commit. No release is needed."
+            exit 0
+          fi
+          if gh release view "$tag" >/dev/null 2>&1; then
+            echo "$tag already has a release."
+            exit 0
           fi
           archive=$(npm pack --silent)
           test -f "$archive"
           echo "archive=$archive" >> "$GITHUB_OUTPUT"
+          echo "tag=$tag" >> "$GITHUB_OUTPUT"
       - name: Publish the GitHub Release
+        if: steps.package.outputs.tag != ''
         env:
           GH_TOKEN: ${{ github.token }}
           GH_REPO: ${{ github.repository }}
-          RELEASE_TAG: ${{ github.ref_name }}
+          RELEASE_TAG: ${{ steps.package.outputs.tag }}
           PACKAGE_ARCHIVE: ${{ steps.package.outputs.archive }}
-        run: gh release create "$RELEASE_TAG" "$PACKAGE_ARCHIVE" --verify-tag --generate-notes
+          RELEASE_COMMIT: ${{ github.sha }}
+        run: gh release create "$RELEASE_TAG" "$PACKAGE_ARCHIVE" --target "$RELEASE_COMMIT" --generate-notes
