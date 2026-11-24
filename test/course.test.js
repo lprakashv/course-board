@@ -321,7 +321,9 @@ test('analytics are optional, configurable, and validated before replacing the b
   } });
   html = await readFile(join(output, 'index.html'), 'utf8');
   assert.match(html, /gtag\/js\?id=G-ABC123/);
-  assert.match(html, /addEventListener\('hashchange'/);
+  assert.match(html, /send_page_view: false/);
+  assert.match(html, /addEventListener\('course-board:navigate'/);
+  assert.match(html, /page_title: document.title/);
   assert.match(html, /data-website-id="94db1cb1-74f4-4a40-ad6c-962362670409"/);
   assert.match(html, /hashBasedRouting: true/);
   for (const analytics of [

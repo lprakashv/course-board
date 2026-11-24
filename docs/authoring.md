@@ -7,19 +7,19 @@ Use Node.js 20.19 or later. Create a project with `npm init -y` if it has no `pa
 For local development, use the [package tarball](publishing.md#1-test-the-package-locally). From a new course directory beside the `course-board` directory, run:
 
 ```sh
-npm install --save-dev --save-exact ../course-board/lprakashv-course-board-0.3.5.tgz
+npm install --save-dev --save-exact ../course-board/lprakashv-course-board-0.3.6.tgz
 ```
 
 After the GitHub Release is available, a course can install the versioned asset URL. Use this option when the course's CI can access the release.
 
 ```sh
-npm install --save-dev --save-exact https://github.com/lprakashv/course-board/releases/download/v0.3.5/lprakashv-course-board-0.3.5.tgz
+npm install --save-dev --save-exact https://github.com/lprakashv/course-board/releases/download/v0.3.6/lprakashv-course-board-0.3.6.tgz
 ```
 
 After the package is on npm, install the release instead:
 
 ```sh
-npm install --save-dev --save-exact @lprakashv/course-board@0.3.5
+npm install --save-dev --save-exact @lprakashv/course-board@0.3.6
 ```
 
 ## 2. Add the starter content and scripts
@@ -191,6 +191,16 @@ export const diagrams = {
 ```
 
 Use `diagram: { type: custom, name: queue-depth, alt: Four items are queued, data: { depth: 4 } }` in a `step` block. Use JSON-compatible values in `data`. The renderer receives the diagram, plus `asset(path)` and `escapeHtml(value)` helpers. Return an HTML string with an accessible label. Escape author-supplied text. A course can also export `onNavigate({ course, lesson, step })` for analytics or other navigation behavior. The hook receives a zero-based step index.
+
+The manifest `title` sets the initial page title and social preview. By default, the home page uses that title and each lesson uses `Lesson title · Course title`. To set a title for each route, export a synchronous `pageTitle` function from the extension:
+
+```js
+export function pageTitle({ course, lesson, step }) {
+  return lesson ? `${lesson.steps[step].title} | ${course.title}` : course.title;
+}
+```
+
+On the home page, `lesson` and `step` are `null`. On a lesson, `step` is a zero-based index. Return a non-empty string. If the function fails or returns another value, the shell uses the default title. The initial HTML and social previews still use the manifest title. A custom shell owns its page titles.
 
 On wide screens, the default shell gives the whiteboard most of the width. Drag the dividers to change the outline or reading width. With a divider in focus, press Left or Right to resize, or Home or End to set its minimum or maximum width. The browser saves these widths. On narrow screens, the board sits above the reading pane. The shell prepares file-based boards for the previous and next steps so that navigation can reuse them.
 

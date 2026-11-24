@@ -60,7 +60,7 @@ To create a separate course, follow the [authoring guide](docs/authoring.md). It
 
 Progress and display preferences are stored in the learner's browser. They do not sync across devices.
 
-The generated page uses the course title and description for social previews. Step links share the course preview because they use fragment routes. Social sites may cache an earlier preview.
+The generated page uses the course title and description for social previews. The course can also [set page titles for each route](docs/authoring.md#6-customize-the-theme-or-add-a-renderer). Step links share the course preview because they use fragment routes. Social sites may cache an earlier preview.
 
 ## Customization
 

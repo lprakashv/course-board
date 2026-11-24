@@ -1,6 +1,24 @@
 import assert from 'node:assert/strict';
 import test from 'node:test';
-import { createCourseShell } from '../src/browser/shell.js';
+import { createCourseShell, setPageTitle } from '../src/browser/shell.js';
+
+test('host controls route titles with a safe default', t => {
+  globalThis.document = { title: '' };
+  t.after(() => { delete globalThis.document; });
+  const course = { title: 'My Course' };
+  const lesson = { title: 'Caching', steps: [{ title: 'Read' }, { title: 'Write' }] };
+  const route = { lesson, step: 1 };
+  setPageTitle(course, null);
+  assert.equal(document.title, 'My Course');
+  setPageTitle(course, route);
+  assert.equal(document.title, 'Caching · My Course');
+  setPageTitle(course, route, ({ lesson, step }) => lesson.steps[step].title);
+  assert.equal(document.title, 'Write');
+  setPageTitle(course, null, ({ lesson, step }) => `${lesson} ${step}`);
+  assert.equal(document.title, 'null null');
+  setPageTitle(course, route, () => ' ');
+  assert.equal(document.title, 'Caching · My Course');
+});
 
 test('shell supports existing routes and state through its lifecycle', () => {
   const handlers = new Map();
