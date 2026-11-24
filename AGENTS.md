@@ -55,4 +55,4 @@ Add a focused regression test when the current tests cannot catch a break. Cover
 
 ## Release changes
 
-[CI](.github/workflows/ci.yml) checks pull requests, pushes to `main`, and version tags. A stable tag that matches `package.json` can publish the npm archive as a GitHub Release asset after both test jobs pass. Follow the [release procedure](docs/publishing.md#2-publish-a-github-release) when the maintainer requests a release.
+[CI](.github/workflows/ci.yml) checks pull requests and pushes to `main`. After both test jobs pass on `main`, the release job creates the tag and GitHub Release for a new stable package version. Follow the [release procedure](docs/publishing.md#2-publish-a-github-release) when the maintainer requests a release.

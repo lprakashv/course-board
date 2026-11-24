@@ -94,7 +94,7 @@ Open the production preview at [127.0.0.1:4174](http://127.0.0.1:4174/). The bui
 | Develop | Course source on disk | `npm run dev` rebuilds the example when you reload the page. |
 | Build and preview | Valid course source | `npm run build` replaces `example/dist/`. `npm run run` serves that build. A failed build keeps the previous output. |
 | Publish a site | The course's `dist/` directory | A static site. [GitHub Pages and local checks](docs/publishing.md#4-deploy-a-course-to-github-pages) |
-| Release Course Board | A tested package version and its matching Git tag | A package archive for other course repositories. [Package release](docs/publishing.md#2-publish-a-github-release) |
+| Release Course Board | A new package version merged to `main` | CI tests the commit and creates the matching tag and package archive. [Package release](docs/publishing.md#2-publish-a-github-release) |
 
 ## Guides
 
