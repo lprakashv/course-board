@@ -14,8 +14,6 @@ diagram:
   caption: The service checks the cache before it reads the database.
 ```
 
-First of all
-
 A request asks for product 42. The service uses the product ID to form the key `product:42`.
 
 1. Look up the key in the cache.

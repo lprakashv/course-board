@@ -25,7 +25,7 @@ export function validate(schema, value, location) {
   throw new Error(`${location}: ${[...new Set(details)].join('; ')}`);
 }
 
-function yaml(source, location) {
+function parseYaml(source, location) {
   const document = parseDocument(source, { stringKeys: true });
   const problem = document.errors[0] ?? document.warnings[0];
   if (problem) throw new Error(`${location}: ${problem.message}`);
@@ -39,36 +39,42 @@ function yaml(source, location) {
 export function parseLesson(source, id) {
   const file = `content/lessons/${id}.md`;
   const normalized = source.replace(/^\uFEFF/, '').replace(/\r\n?/g, '\n');
-  const front = normalized.match(/^---[ \t]*\n([\s\S]*?)\n---[ \t]*(?:\n|$)/);
-  if (!front) throw new Error(`${file}: expected YAML front matter between --- lines`);
-  const metadata = yaml(front[1], file);
+  const frontMatter = normalized.match(/^---[ \t]*\n([\s\S]*?)\n---[ \t]*(?:\n|$)/);
+  if (!frontMatter) throw new Error(`${file}: expected YAML front matter between --- lines`);
+  const metadata = parseYaml(frontMatter[1], file);
   validate(lessonSchema, metadata, file);
 
-  const body = normalized.slice(front[0].length);
+  const body = normalized.slice(frontMatter[0].length);
   const lines = body.split('\n');
   const tokens = markdown.parse(body, {});
-  const headings = tokens.flatMap((token, index) =>
-    token.type === 'heading_open' && token.tag === 'h2' && token.markup === '##' && token.level === 0
-      ? [index] : []);
-  if (headings[0] !== 0) throw new Error(`${file}: start the lesson with a ## step heading`);
+  const stepHeadings = [];
+  for (const [index, token] of tokens.entries()) {
+    if (token.type === 'heading_open' && token.tag === 'h2' && token.markup === '##' && token.level === 0) {
+      stepHeadings.push(index);
+    }
+  }
+  if (stepHeadings[0] !== 0) throw new Error(`${file}: start the lesson with a ## step heading`);
 
   const stepIds = new Set();
-  const steps = headings.map((index, position) => {
+  const steps = stepHeadings.map((index, position) => {
     const location = `${file}, step ${position + 1}`;
-    const [heading, titleToken, , fence] = tokens.slice(index, index + 4);
+    // Markdown-it emits an opening token, the title, and a closing token for each heading.
+    const heading = tokens[index];
+    const titleToken = tokens[index + 1];
+    const afterHeading = tokens[index + 3];
     const title = titleToken.content.trim();
     if (!title) throw new Error(`${location}: add a step title`);
-    const end = tokens[headings[position + 1]]?.map[0];
-    const hasMetadata = fence?.type === 'fence' && fence.info.trim() === 'step';
-    const settings = hasMetadata ? yaml(fence.content, location) : {};
+    const endLine = tokens[stepHeadings[position + 1]]?.map[0];
+    const hasMetadata = afterHeading?.type === 'fence' && afterHeading.info.trim() === 'step';
+    const settings = hasMetadata ? parseYaml(afterHeading.content, location) : {};
     validate(stepSchema, settings, location);
     if (settings.id) {
       if (stepIds.has(settings.id)) throw new Error(`${location}: duplicate step ID "${settings.id}"`);
       stepIds.add(settings.id);
     }
 
-    const start = hasMetadata ? fence.map[1] : heading.map[1];
-    const prose = lines.slice(start, end).join('\n').trim();
+    const startLine = hasMetadata ? afterHeading.map[1] : heading.map[1];
+    const prose = lines.slice(startLine, endLine).join('\n').trim();
     if (!prose) throw new Error(`${location}: add Markdown after the step heading`);
     const env = {};
     const proseTokens = markdown.parse(prose, env);
@@ -76,10 +82,13 @@ export function parseLesson(source, id) {
       throw new Error(`${location}: put one step block directly after the heading`);
     }
     if (settings.diagram) {
-      const state = proseTokens.find((token, i) => token.type === 'table_open' && token.level === 0 &&
-        proseTokens[i - 3]?.type === 'heading_open' && proseTokens[i - 3].tag === 'h3' &&
-        proseTokens[i - 2].content === 'Example state');
-      state?.attrSet('data-board-state', '');
+      // A table can follow the three heading tokens directly.
+      const stateTable = proseTokens.find((token, index) => {
+        const heading = proseTokens[index - 3];
+        return token.type === 'table_open' && token.level === 0 && heading?.type === 'heading_open' &&
+          heading.tag === 'h3' && proseTokens[index - 2].content === 'Example state';
+      });
+      stateTable?.attrSet('data-board-state', '');
     }
     return { title, text: prose, html: markdown.renderer.render(proseTokens, markdown.options, env), ...settings };
   });
@@ -167,10 +176,10 @@ export async function readProject(directory = '.', { includeSources = false } = 
   const root = resolve(directory);
   const sources = includeSources ? new Map() : undefined;
   const manifestPath = join(root, 'content/course.json');
-  const input = await readFile(manifestPath, 'utf8');
+  const input = await readLocalContent(root, 'course.json', root, sources);
   let manifest;
   try {
-    manifest = JSON.parse(input.replace(/^\uFEFF/, ''));
+    manifest = JSON.parse(input);
   } catch (error) {
     throw new Error(`${manifestPath}: ${error.message}`, { cause: error });
   }
@@ -191,8 +200,7 @@ export async function readProject(directory = '.', { includeSources = false } = 
     for (const id of chapter.lessons) {
       if (ids.has(id)) throw new Error(`${manifestPath}: duplicate lesson ID "${id}"`);
       ids.add(id);
-      const source = await readFile(join(root, 'content', 'lessons', `${id}.md`), 'utf8');
-      sources?.set(`lessons/${id}.md`, source);
+      const source = await readLocalContent(root, `lessons/${id}.md`, manifestPath, sources);
       const lesson = parseLesson(source, id);
       validateData(validators.lesson, lesson.data, `content/lessons/${id}.md`);
       for (const [index, step] of lesson.steps.entries()) {

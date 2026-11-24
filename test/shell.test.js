@@ -22,6 +22,8 @@ test('shell supports existing routes and state through its lifecycle', () => {
   stop();
   assert.deepEqual(calls, ['initial', 'navigation']);
   assert.equal(handlers.size, 0);
+  assert.throws(() => shell.start({ render() { throw new Error('Could not render'); } }), /Could not render/);
+  assert.equal(handlers.size, 0);
   target.localStorage = { getItem() { throw Error('blocked'); }, setItem() { throw Error('blocked'); } };
   assert.deepEqual(shell.readState({}), {});
   assert.doesNotThrow(() => shell.writeState({}));

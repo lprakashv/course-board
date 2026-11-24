@@ -1,6 +1,6 @@
 #!/usr/bin/env node
 import { readdir } from 'node:fs/promises';
-import { resolve } from 'node:path';
+import { join, resolve } from 'node:path';
 import { pathToFileURL } from 'node:url';
 import { parseArgs } from 'node:util';
 import { compileCourse, buildSite, copyBrowserShell, copyDiagramRenderer } from './index.js';
@@ -8,14 +8,14 @@ import { serve } from './serve.js';
 
 const usage = `Usage: course-board <command> [path]
 
-  check [directory]  Validate a course.
+  check [directory]                          Validate a course.
   build [directory] [--customize <module>]  Build static files in dist/.
   ingest <bundle.json> [directory]          Import course content and assets.
   author [directory]                       Edit a course in Studio (PORT defaults to 4175).
   dev [directory] [--customize <module>]    Build on page reload (PORT defaults to 4173).
   preview [directory]                      Serve dist/ (PORT defaults to 4174).
-  vendor <file>      Copy the diagram renderer for a native ES module site.
-  vendor-shell <directory>  Copy the default shell browser modules.`;
+  vendor <file>                             Copy the diagram renderer for a native ES module site.
+  vendor-shell <directory>                  Copy the default shell browser modules.`;
 
 function getPort(fallback) {
   const port = Number(process.env.PORT ?? fallback);
@@ -24,7 +24,7 @@ function getPort(fallback) {
 }
 
 async function main(args) {
-  const { positionals: [command, path, ...extra], values } = parseArgs({
+  const { positionals: [command, pathArgument, ...remaining], values } = parseArgs({
     args, allowPositionals: true,
     options: { help: { type: 'boolean', short: 'h' }, customize: { type: 'string' } },
   });
@@ -32,8 +32,8 @@ async function main(args) {
     console.log(usage);
     return;
   }
-  if (extra.length > (command === 'ingest' ? 1 : 0)) throw new Error(usage);
-  const directory = path ?? '.';
+  if (remaining.length > (command === 'ingest' ? 1 : 0)) throw new Error(usage);
+  const directory = pathArgument ?? '.';
   const options = {};
   if (values.customize !== undefined) {
     if ((command !== 'build' && command !== 'dev') || !values.customize) throw new Error(usage);
@@ -54,10 +54,11 @@ async function main(args) {
       console.log(`Built ${await buildSite(directory, options)}`);
       return;
     case 'ingest': {
-      if (!path) throw new Error('Usage: course-board ingest <bundle.json> [directory]');
+      if (!pathArgument) throw new Error('Usage: course-board ingest <bundle.json> [directory]');
       const { ingestBundle } = await import('./author/project.js');
-      await ingestBundle(path, extra[0] ?? '.');
-      console.log(`Imported ${path} into ${extra[0] ?? '.'}`);
+      const targetDirectory = remaining[0] ?? '.';
+      await ingestBundle(pathArgument, targetDirectory);
+      console.log(`Imported ${pathArgument} into ${targetDirectory}`);
       return;
     }
     case 'author': {
@@ -70,20 +71,28 @@ async function main(args) {
     }
     case 'dev':
     case 'preview': {
-      const port = getPort(command === 'dev' ? 4173 : 4174);
-      if (command === 'preview') await readdir(`${directory}/dist`);
-      await serve(directory, { dev: command === 'dev', port, ...options });
+      const dev = command === 'dev';
+      const port = getPort(dev ? 4173 : 4174);
+      if (!dev) {
+        try {
+          await readdir(join(directory, 'dist'));
+        } catch (error) {
+          if (error.code !== 'ENOENT') throw error;
+          throw new Error('No build to preview. Run course-board build for this directory first.', { cause: error });
+        }
+      }
+      await serve(directory, { dev, port, ...options });
       return;
     }
     case 'vendor-shell':
-      if (!path) throw new Error('Usage: course-board vendor-shell <directory>');
-      await copyBrowserShell(path);
-      console.log(`Copied the browser shell to ${path}`);
+      if (!pathArgument) throw new Error('Usage: course-board vendor-shell <directory>');
+      await copyBrowserShell(pathArgument);
+      console.log(`Copied the browser shell to ${pathArgument}`);
       return;
     case 'vendor':
-      if (!path) throw new Error('Usage: course-board vendor <file>');
-      await copyDiagramRenderer(path);
-      console.log(`Copied the diagram renderer to ${path}`);
+      if (!pathArgument) throw new Error('Usage: course-board vendor <file>');
+      await copyDiagramRenderer(pathArgument);
+      console.log(`Copied the diagram renderer to ${pathArgument}`);
       return;
     default:
       throw new Error(usage);

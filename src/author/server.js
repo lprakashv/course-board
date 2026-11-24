@@ -2,15 +2,15 @@ import { createHash } from 'node:crypto';
 import { createServer } from 'node:http';
 import { readFile } from 'node:fs/promises';
 import { createRequire } from 'node:module';
-import { dirname, extname, join, relative, resolve } from 'node:path';
+import { dirname, extname, join, relative, resolve, sep } from 'node:path';
 import { fileURLToPath } from 'node:url';
 import { build } from 'esbuild';
 import { publicFiles } from '../content.js';
 import { isAssetPath } from '../browser/diagrams.js';
 import { readDraft, saveDraft } from './project.js';
 
-const ui = fileURLToPath(new URL('./browser/', import.meta.url));
-const types = {
+const studioUiDirectory = fileURLToPath(new URL('./browser/', import.meta.url));
+const mimeTypes = {
   '.html': 'text/html; charset=utf-8', '.css': 'text/css; charset=utf-8',
   '.js': 'text/javascript; charset=utf-8', '.woff2': 'font/woff2',
   '.svg': 'image/svg+xml', '.png': 'image/png', '.jpg': 'image/jpeg', '.jpeg': 'image/jpeg',
@@ -32,7 +32,7 @@ function send(response, status, body, type = 'application/json', fontWorker = fa
   response.end(type === 'application/json' && !Buffer.isBuffer(body) ? JSON.stringify(body) : body);
 }
 
-async function readSave(request) {
+async function readSaveRequest(request) {
   const chunks = [];
   let received = 0;
   for await (const chunk of request.iterator({ destroyOnReturn: false })) {
@@ -45,26 +45,30 @@ async function readSave(request) {
     }
     chunks.push(chunk);
   }
-  const { manifest, lessons, assets = {}, revision } = JSON.parse(Buffer.concat(chunks));
-  if (revision !== null && !/^[a-f\d]{64}$/.test(revision ?? '')) throw new Error('Reload Studio to get the current course revision.');
+  const payload = JSON.parse(Buffer.concat(chunks));
+  if (!payload || typeof payload !== 'object' || Array.isArray(payload)) throw new Error('Expected a course object.');
+  const { manifest, lessons, assets = {}, revision } = payload;
+  if (revision !== null && (typeof revision !== 'string' || !/^[a-f\d]{64}$/.test(revision))) {
+    throw new Error('Reload Studio to get the current course revision.');
+  }
   if (!assets || typeof assets !== 'object' || Array.isArray(assets)) throw new Error('Expected a map of uploaded files.');
-  const files = new Map();
+  const uploadedFiles = new Map();
   for (const [path, data] of Object.entries(assets)) {
     if (!/^(?:diagrams\/[a-f\d]{64}\.(?:excalidraw|svg|png|jpe?g|gif|webp|avif|html)|themes\/[a-f\d]{64}\.css)$/.test(path) ||
       typeof data !== 'string' || !/^[a-zA-Z0-9+/]+={0,2}$/.test(data)) throw new Error(`Invalid upload for "${path}".`);
     const bytes = Buffer.from(data, 'base64');
     const hash = createHash('sha256').update(bytes).digest('hex');
     if (!path.includes(`/${hash}.`)) throw new Error(`Upload content does not match "${path}".`);
-    files.set(path, bytes);
+    uploadedFiles.set(path, bytes);
   }
-  return { draft: { manifest, lessons }, files, revision };
+  return { draft: { manifest, lessons }, uploadedFiles, revision };
 }
 
-async function studioFiles() {
-  const outdir = join(ui, 'bundle');
+async function bundleStudio() {
+  const outputDirectory = join(studioUiDirectory, 'bundle');
   const { outputFiles } = await build({
-    entryPoints: { app: join(ui, 'app.js'), board: join(ui, 'board.js') },
-    outdir,
+    entryPoints: { app: join(studioUiDirectory, 'app.js'), board: join(studioUiDirectory, 'board.js') },
+    outdir: outputDirectory,
     write: false,
     bundle: true,
     splitting: true,
@@ -75,9 +79,13 @@ async function studioFiles() {
     define: { 'process.env.NODE_ENV': '"production"' },
     loader: { '.woff2': 'file' },
   });
-  const files = new Map(outputFiles.map(file => [`/studio/${relative(outdir, file.path)}`, file.contents]));
+  const files = new Map();
+  for (const file of outputFiles) {
+    const urlPath = relative(outputDirectory, file.path).split(sep).join('/');
+    files.set(`/studio/${urlPath}`, file.contents);
+  }
   for (const name of ['index.html', 'studio.css']) {
-    files.set(name === 'index.html' ? '/' : `/${name}`, await readFile(join(ui, name)));
+    files.set(name === 'index.html' ? '/' : `/${name}`, await readFile(join(studioUiDirectory, name)));
   }
   files.set('/favicon.svg', await readFile(new URL('../browser/favicon.svg', import.meta.url)));
   return files;
@@ -85,11 +93,11 @@ async function studioFiles() {
 
 export async function serveStudio(directory, port) {
   const root = resolve(directory);
-  const assets = join(root, 'public');
+  const publicDirectory = join(root, 'public');
   const require = createRequire(import.meta.url);
-  const fonts = join(dirname(require.resolve('@excalidraw/excalidraw')), 'fonts');
-  const files = await studioFiles();
-  let saving;
+  const fontDirectory = join(dirname(require.resolve('@excalidraw/excalidraw')), 'fonts');
+  const studioFiles = await bundleStudio();
+  let pendingSave;
   const server = createServer(async (request, response) => {
     const host = `127.0.0.1:${server.address().port}`;
     if (request.headers.host !== host) return send(response, 403, { error: 'Open Studio at its loopback address.' });
@@ -101,37 +109,37 @@ export async function serveStudio(directory, port) {
         if (request.headers.origin !== origin || !/^application\/json(?:;|$)/i.test(request.headers['content-type'] ?? '')) {
           return send(response, 403, { error: 'Save the course from the local Studio page.' });
         }
-        if (saving) return send(response, 409, { error: 'Another save is in progress. Try again.' });
-        saving = (async () => {
-          const { draft, files, revision } = await readSave(request);
-          return saveDraft(root, draft, files, { revision });
+        if (pendingSave) return send(response, 409, { error: 'Another save is in progress. Try again.' });
+        pendingSave = (async () => {
+          const { draft, uploadedFiles, revision } = await readSaveRequest(request);
+          return saveDraft(root, draft, uploadedFiles, { revision });
         })();
         try {
-          return send(response, 200, await saving);
+          return send(response, 200, await pendingSave);
         } finally {
-          saving = undefined;
+          pendingSave = undefined;
         }
       }
       if (request.method !== 'GET') return send(response, 405, { error: 'Method not allowed.' });
       if (pathname === '/api/course') {
-        if (saving) await saving.catch(() => {});
+        if (pendingSave) await pendingSave.catch(() => {});
         return send(response, 200, await readDraft(root));
       }
       if (pathname === '/api/asset') {
         const path = url.searchParams.get('path');
-        const type = isAssetPath(path) && types[extname(path)];
-        if ((type === 'application/json' || type?.startsWith('image/')) && (await publicFiles(assets)).has(path)) {
-          return send(response, 200, await readFile(join(assets, path)), type);
+        const type = isAssetPath(path) ? mimeTypes[extname(path)] : undefined;
+        if ((type === 'application/json' || type?.startsWith('image/')) && (await publicFiles(publicDirectory)).has(path)) {
+          return send(response, 200, await readFile(join(publicDirectory, path)), type);
         }
       }
       if (/^\/fonts\/(?:[\w-]+\/)*[\w.-]+\.woff2$/.test(pathname)) {
-        return send(response, 200, await readFile(join(fonts, pathname.slice('/fonts/'.length))), 'font/woff2');
+        return send(response, 200, await readFile(join(fontDirectory, pathname.slice('/fonts/'.length))), 'font/woff2');
       }
-      const file = files.get(pathname);
+      const file = studioFiles.get(pathname);
       if (file) {
         // Excalidraw's font subsetter uses Emscripten bindings in a dedicated worker.
         const fontWorker = request.headers['sec-fetch-dest'] === 'worker' && /^\/studio\/subset-worker\.chunk-[\w-]+\.js$/.test(pathname);
-        return send(response, 200, file, types[extname(pathname)] ?? types['.html'], fontWorker);
+        return send(response, 200, file, mimeTypes[extname(pathname)] ?? mimeTypes['.html'], fontWorker);
       }
       return send(response, 404, { error: 'File not found.' });
     } catch (error) {

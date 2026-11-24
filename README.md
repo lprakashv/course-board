@@ -34,6 +34,8 @@ npm ci
 npm run dev
 ```
 
+The lockfile uses the public npm registry. If npm selects a different registry that does not supply the dependencies, use `npm ci --registry=https://registry.npmjs.org/` where your network permits it.
+
 Open [the learner preview](http://127.0.0.1:4173/). Edit a file in `example/content/` or `example/public/`, then reload the page. Press Ctrl+C to stop the server.
 
 To edit the example in Studio, open a second terminal in the repository and run:
@@ -78,10 +80,21 @@ npm run lint
 npm test
 npm run coverage
 npm run build
+npm pack --dry-run
 npm run run
 ```
 
-Open [the production preview](http://127.0.0.1:4174/). The build writes to `example/dist/`. Upload this directory to a static host for the sample site. Coverage reports the modules loaded by Node tests. Use a browser to check the interface.
+Open the production preview at [127.0.0.1:4174](http://127.0.0.1:4174/). The build writes to `example/dist/`. Upload this directory to a static host for the sample site. Coverage reports the modules loaded by Node tests. Use a browser to check the interface.
+
+## Course workflows
+
+| Task | Input | Result |
+| --- | --- | --- |
+| Write or import | Markdown and public files, a CLI bundle, or a Studio draft | Validated course source on disk. [Authoring](docs/authoring.md) · [Studio](docs/studio.md) |
+| Develop | Course source on disk | `npm run dev` rebuilds the example when you reload the page. |
+| Build and preview | Valid course source | `npm run build` replaces `example/dist/`. `npm run run` serves that build. A failed build keeps the previous output. |
+| Publish a site | The course's `dist/` directory | A static site. [GitHub Pages and local checks](docs/publishing.md#4-deploy-a-course-to-github-pages) |
+| Release Course Board | A tested package version and its matching Git tag | A package archive for other course repositories. [Package release](docs/publishing.md#2-publish-a-github-release) |
 
 ## Guides
 
@@ -102,10 +115,11 @@ A new course can use the full site builder. An existing interface can use the de
 | --- | --- |
 | [`schemas/`](schemas/) | JSON Schema contracts for the manifest and lesson metadata |
 | [`src/content.js`](src/content.js) | Markdown compiler and asset validation |
+| [`src/project-lock.js`](src/project-lock.js) | Shared lock for builds, imports, and Studio saves |
 | [`src/author/`](src/author/) | CLI import and local Course Board Studio |
 | [`src/browser/`](src/browser/) | Static site and standalone diagram renderer |
 | [`example/`](example/) | Sample course and CLI import bundle |
-| [`test/`](test/) | Compiler, renderer, navigation, and build tests |
+| [`test/`](test/) | Compiler, build, preview, Studio save, renderer, and navigation tests |
 | [`.github/workflows/ci.yml`](.github/workflows/ci.yml) | Build checks and tagged GitHub Releases |
 | [`.github/workflows/showcase.yml`](.github/workflows/showcase.yml) | Build the showcase courses and refresh their screenshots |
 | [`AGENTS.md`](AGENTS.md) | Contributor and coding agent guidance |

@@ -7,8 +7,6 @@ summary: Remove an old cached value after a database write.
 
 Use a shorter lifetime when values change often. Use a longer lifetime when values change less often and more cache hits are useful.
 
-asdasd
-
 ## Remove a stale copy
 
 ```step
@@ -23,5 +21,3 @@ diagram:
 Write the new value to the database. Then remove the old value from the cache. The next read can fetch the new value and fill the cache again.
 
 > **Assumption.** This example has one writer and no concurrent reads between the write and removal.
-
-Sample text
