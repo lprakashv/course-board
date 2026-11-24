@@ -38,8 +38,10 @@ function analyticsMarkup(settings) {
     window.dataLayer = window.dataLayer || [];
     function gtag() { dataLayer.push(arguments); }
     gtag('js', new Date());${container ? '' : `
-    gtag('config', '${google}');
-    window.addEventListener('hashchange', () => gtag('event', 'page_view', { page_location: location.href }));`}
+    gtag('config', '${google}', { send_page_view: false });
+    window.addEventListener('course-board:navigate', () => gtag('event', 'page_view', {
+      page_location: location.href, page_title: document.title
+    }));`}
   </script>`);
   }
   if (umami) {

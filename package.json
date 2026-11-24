@@ -1,6 +1,6 @@
 {
   "name": "@lprakashv/course-board",
-  "version": "0.3.5",
+  "version": "0.3.6",
   "description": "Build and publish step-by-step static courses from Markdown.",
   "type": "module",
   "license": "MIT",
