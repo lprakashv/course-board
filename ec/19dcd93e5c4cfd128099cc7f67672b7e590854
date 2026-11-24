@@ -1,0 +1,39 @@
+src/build.js
+  s_a1e35e1bb1e5e1::t_48ffce6e7f4c19 41-44
+docs/publishing.md
+  s_a1e35e1bb1e5e1::t_a7e04cc1cfafaf 19
+  s_a1e35e1bb1e5e1::t_0a75ff8a3faf07 82
+src/browser/app.js
+  s_a1e35e1bb1e5e1::t_48ffce6e7f4c19 4,248,261
+docs/authoring.md
+  s_a1e35e1bb1e5e1::t_0a75ff8a3faf07 195-204
+  s_a1e35e1bb1e5e1::t_a7e04cc1cfafaf 10,16,22
+test/shell.test.js
+  s_a1e35e1bb1e5e1::t_3203ce0212ffe0 3-21
+README.md
+  s_a1e35e1bb1e5e1::t_0a75ff8a3faf07 63
+test/course.test.js
+  s_a1e35e1bb1e5e1::t_48ffce6e7f4c19 324-326
+src/browser/shell.js
+  s_a1e35e1bb1e5e1::t_48ffce6e7f4c19 1-13
+package.json
+  s_a1e35e1bb1e5e1::t_a7e04cc1cfafaf 3
+package-lock.json
+  s_a1e35e1bb1e5e1::t_acac2b3d25faf7 3,9
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.7.5",
+  "base_commit_sha": "ec19dcd93e5c4cfd128099cc7f67672b7e590854",
+  "prompts": {},
+  "sessions": {
+    "s_a1e35e1bb1e5e1": {
+      "agent_id": {
+        "tool": "codex",
+        "id": "01a20cb8-c044-72b2-bef3-ff4bfa3fa7ef",
+        "model": "gpt-6.1-terra"
+      },
+      "human_author": "Lalit Vatsal <lprakashv@gmail.com>"
+    }
+  }
+}
