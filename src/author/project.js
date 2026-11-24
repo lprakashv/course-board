@@ -1,18 +1,19 @@
 import { createHash } from 'node:crypto';
 import { constants } from 'node:fs';
-import { copyFile, cp, lstat, mkdir, mkdtemp, readFile, readdir, rename, rm, writeFile } from 'node:fs/promises';
+import { copyFile, cp, link, lstat, mkdir, mkdtemp, readFile, readdir, rename, rm, writeFile } from 'node:fs/promises';
 import { dirname, isAbsolute, join, resolve } from 'node:path';
 import { isDeepStrictEqual } from 'node:util';
 import Ajv from 'ajv';
 import { stringify } from 'yaml';
 import { loadSchema, parseLesson, readProject, validate } from '../content.js';
 import { isAssetPath } from '../browser/diagrams.js';
+import { acquireProjectLock } from '../project-lock.js';
 
 const ajv = new Ajv({ allErrors: true });
 for (const name of ['manifest', 'lesson', 'step']) ajv.addSchema(await loadSchema(name), `${name}.json`);
 const bundleSchema = ajv.compile(await loadSchema('ingest'));
 
-async function info(path) {
+async function entryInfo(path) {
   try {
     return await lstat(path);
   } catch (error) {
@@ -20,8 +21,8 @@ async function info(path) {
   }
 }
 
-async function sourceDirectory(path) {
-  const entry = await info(path);
+async function checkSourceDirectory(path) {
+  const entry = await entryInfo(path);
   if (!entry) return false;
   if (!entry.isDirectory()) throw new Error(`${path}: expected a directory`);
   const entries = await readdir(path, { recursive: true, withFileTypes: true });
@@ -32,8 +33,8 @@ async function sourceDirectory(path) {
 }
 
 export async function readDraft(root) {
-  await sourceDirectory(join(root, 'content'));
-  const manifestInfo = await info(join(root, 'content/course.json'));
+  await checkSourceDirectory(join(root, 'content'));
+  const manifestInfo = await entryInfo(join(root, 'content/course.json'));
   if (!manifestInfo) {
     return {
       revision: null,
@@ -44,7 +45,7 @@ export async function readDraft(root) {
   const { manifest, course, sources } = await readProject(root, { includeSources: true });
   const lessonList = course.chapters.flatMap(chapter => chapter.lessons);
   return {
-    revision: createHash('sha256').update(JSON.stringify([manifest, [...sources]])).digest('hex'),
+    revision: createHash('sha256').update(JSON.stringify([...sources])).digest('hex'),
     manifest,
     lessons: lessonList.map(lesson => ({
       ...lesson,
@@ -56,14 +57,15 @@ export async function readDraft(root) {
 }
 
 function lessonMarkdown({ id, steps, ...metadata }) {
-  const yaml = value => stringify(value, { lineWidth: 0 });
+  const serializeYaml = value => stringify(value, { lineWidth: 0 });
   const body = steps.map(({ title, text, ...settings }) => {
     const heading = title.trim();
+    // A closing marker tells Markdown to keep any trailing hashes in the title.
     const suffix = heading.endsWith('#') ? ' ##' : '';
-    const block = Object.keys(settings).length ? `\n\n\`\`\`step\n${yaml(settings)}\`\`\`` : '';
+    const block = Object.keys(settings).length ? `\n\n\`\`\`step\n${serializeYaml(settings)}\`\`\`` : '';
     return `## ${heading}${suffix}${block}\n\n${text.trim()}`;
   });
-  const source = `---\n${yaml(metadata)}---\n\n${body.join('\n\n')}\n`;
+  const source = `---\n${serializeYaml(metadata)}---\n\n${body.join('\n\n')}\n`;
   const compiled = parseLesson(source, id).steps;
   if (compiled.length !== steps.length || compiled.some((step, index) =>
     step.title !== steps[index].title.trim() || step.text !== steps[index].text.replace(/\r\n?/g, '\n').trim())) {
@@ -124,19 +126,96 @@ export async function ingestBundle(file, directory) {
   await saveDraft(directory, { manifest: bundle.manifest, lessons: bundle.lessons }, assets, { contentFiles });
 }
 
+async function stageDraft(root, staged, draft, previous, assets, contentFiles) {
+  for (const name of ['content', 'public']) {
+    const source = join(root, name);
+    if (await checkSourceDirectory(source)) {
+      await cp(source, join(staged, name), { recursive: true, mode: constants.COPYFILE_FICLONE });
+    }
+  }
+  const changes = [];
+  for (const [directory, files] of [['public', assets], ['content', contentFiles]]) {
+    for (const [path, bytes] of files) {
+      if (!isAssetPath(path)) throw new Error(`Invalid ${directory} file path "${path}".`);
+      const relativePath = `${directory}/${path}`;
+      const target = join(staged, relativePath);
+      await mkdir(dirname(target), { recursive: true });
+      if (await entryInfo(target)) {
+        if ((await readFile(target)).equals(bytes)) continue;
+        if (previous) throw new Error(`File "${relativePath}" already exists with different content.`);
+      }
+      await writeFile(target, bytes);
+      changes.push({ path: relativePath, createOnly: Boolean(previous) });
+    }
+  }
+
+  const originals = new Map(previous?.lessons.map(lesson => [lesson.id, lesson]));
+  await mkdir(join(staged, 'content/lessons'), { recursive: true });
+  for (const lesson of draft.lessons) {
+    const original = originals.get(lesson.id);
+    if (isDeepStrictEqual(lesson, original)) continue;
+    const path = `content/lessons/${lesson.id}.md`;
+    const target = join(staged, path);
+    const createOnly = Boolean(previous && !original);
+    if (createOnly && await entryInfo(target)) {
+      throw new Error(`Lesson ID "${lesson.id}" already has a source file. Choose a different ID in Studio.`);
+    }
+    await writeFile(target, lessonMarkdown(lesson));
+    changes.push({ path, createOnly });
+  }
+  // Publish the manifest last so it does not refer to files that are absent.
+  if (!isDeepStrictEqual(draft.manifest, previous?.manifest)) {
+    await writeFile(join(staged, 'content/course.json'), `${JSON.stringify(draft.manifest, null, 2)}\n`);
+    changes.push({ path: 'content/course.json', createOnly: previous?.revision === null });
+  }
+  return changes;
+}
+
+async function publishDraftFiles(root, staged, backupDirectory, changes) {
+  const publishedFiles = [];
+  try {
+    for (const { path, createOnly } of changes) {
+      const target = join(root, path);
+      const source = join(staged, path);
+      await mkdir(dirname(target), { recursive: true });
+      if (createOnly) {
+        // An exclusive link leaves a file that appeared during the save intact.
+        await link(source, target);
+        publishedFiles.push({ target });
+        continue;
+      }
+      const existing = await entryInfo(target);
+      let backup;
+      if (existing) {
+        if (!existing.isFile()) throw new Error(`${target}: expected a regular file`);
+        backup = join(backupDirectory, path);
+        await mkdir(dirname(backup), { recursive: true });
+        await copyFile(target, backup);
+      }
+      await rename(source, target);
+      publishedFiles.push({ target, backup });
+    }
+  } catch (error) {
+    try {
+      for (const { target, backup } of publishedFiles.reverse()) {
+        if (backup) await rename(backup, target);
+        else await rm(target);
+      }
+    } catch (restoreError) {
+      throw new Error(`Could not restore course files. Backups are in ${backupDirectory}.`, { cause: restoreError });
+    }
+    await rm(backupDirectory, { recursive: true, force: true });
+    throw error;
+  }
+  await rm(backupDirectory, { recursive: true, force: true });
+}
+
 export async function saveDraft(directory, draft, assets, { revision, contentFiles = new Map() } = {}) {
   validateBundle(draft);
   const root = resolve(directory);
-  const lock = join(root, '.course-board-author-lock');
   await mkdir(root, { recursive: true });
-  try {
-    await mkdir(lock);
-  } catch (error) {
-    if (error.code === 'EEXIST') throw new Error('Another Course Board author is saving. Try again after it finishes.');
-    throw error;
-  }
+  const releaseLock = await acquireProjectLock(root);
   let temporary;
-  let keepBackup = false;
   try {
     const previous = revision === undefined ? undefined : await readDraft(root);
     if (previous && revision !== previous.revision) {
@@ -144,81 +223,23 @@ export async function saveDraft(directory, draft, assets, { revision, contentFil
       error.status = 409;
       throw error;
     }
-    const originals = new Map(previous?.lessons.map(lesson => [lesson.id, lesson]));
     temporary = await mkdtemp(join(root, '.course-board-'));
     const staged = join(temporary, 'next');
-    for (const name of ['content', 'public']) {
-      const source = join(root, name);
-      if (await sourceDirectory(source)) {
-        await cp(source, join(staged, name), { recursive: true, mode: constants.COPYFILE_FICLONE });
-      }
-    }
-    const lessons = join(staged, 'content/lessons');
-    await mkdir(lessons, { recursive: true });
-    const changes = [];
-    for (const [directory, files] of [['public', assets], ['content', contentFiles]]) {
-      for (const [path, bytes] of files) {
-        if (!isAssetPath(path)) throw new Error(`Invalid ${directory} file path "${path}".`);
-        const relative = `${directory}/${path}`;
-        const target = join(staged, relative);
-        await mkdir(dirname(target), { recursive: true });
-        if (await info(target)) {
-          if ((await readFile(target)).equals(bytes)) continue;
-          if (previous) throw new Error(`File "${relative}" already exists with different content.`);
-        }
-        await writeFile(target, bytes);
-        changes.push(relative);
-      }
-    }
-    for (const lesson of draft.lessons) {
-      if (isDeepStrictEqual(lesson, originals.get(lesson.id))) continue;
-      await writeFile(join(lessons, `${lesson.id}.md`), lessonMarkdown(lesson));
-      changes.push(`content/lessons/${lesson.id}.md`);
-    }
-    if (!isDeepStrictEqual(draft.manifest, previous?.manifest)) {
-      await writeFile(join(staged, 'content/course.json'), `${JSON.stringify(draft.manifest, null, 2)}\n`);
-      changes.push('content/course.json');
-    }
+    const changes = await stageDraft(root, staged, draft, previous, assets, contentFiles);
     const saved = await readDraft(staged);
     if (previous && previous.revision !== (await readDraft(root)).revision) {
       const error = new Error('The course changed during the save. Reload Studio before saving.');
       error.status = 409;
       throw error;
     }
-    const moved = [];
-    try {
-      for (const path of changes) {
-        const target = join(root, path);
-        const existing = await info(target);
-        let backup;
-        if (existing) {
-          if (!existing.isFile()) throw new Error(`${target}: expected a regular file`);
-          backup = join(temporary, 'previous', path);
-          await mkdir(dirname(backup), { recursive: true });
-          await copyFile(target, backup);
-        }
-        await mkdir(dirname(target), { recursive: true });
-        await rename(join(staged, path), target);
-        moved.push({ target, backup });
-      }
-    } catch (error) {
-      try {
-        for (const { target, backup } of moved.reverse()) {
-          if (backup) await rename(backup, target);
-          else await rm(target);
-        }
-      } catch (restoreError) {
-        keepBackup = true;
-        throw new Error(`Could not restore course files. Backups are in ${temporary}.`, { cause: restoreError });
-      }
-      throw error;
-    }
+    // Store backups beside the staging directory so they survive a rollback failure.
+    await publishDraftFiles(root, staged, `${temporary}-previous`, changes);
     return saved;
   } finally {
     try {
-      if (temporary && !keepBackup) await rm(temporary, { recursive: true, force: true });
+      if (temporary) await rm(temporary, { recursive: true, force: true });
     } finally {
-      await rm(lock, { recursive: true, force: true });
+      await releaseLock();
     }
   }
 }

@@ -1,10 +1,12 @@
 import assert from 'node:assert/strict';
+import { EventEmitter, once } from 'node:events';
 import { cp, mkdtemp, readFile, rm, symlink, writeFile } from 'node:fs/promises';
 import { tmpdir } from 'node:os';
 import { join } from 'node:path';
 import { test } from 'node:test';
 import { fileURLToPath, pathToFileURL } from 'node:url';
 import { buildSite, compileCourse, copyDiagramRenderer, parseLesson } from '../src/index.js';
+import { ingestBundle } from '../src/author/project.js';
 import { assetUrl, renderDiagram } from '../src/browser/diagrams.js';
 import { getRoute, lessonHref } from '../src/browser/navigation.js';
 
@@ -76,10 +78,12 @@ test('the built HTML exposes escaped course metadata to social previews', async 
   assert.match(html, /<title>Cache &amp; &quot;Data&quot; &lt;Guide&gt;<\/title>/);
   assert.match(html, /property="og:title" content="Cache &amp; &quot;Data&quot; &lt;Guide&gt;"/);
   assert.match(html, /name="twitter:description" content="Learn &quot;cache&quot; &amp; more\."/);
+  manifest.title = 'Cache $& $\x60 and $\'';
   delete manifest.description;
   await writeFile(manifestPath, JSON.stringify(manifest));
   await buildSite(path);
   html = await readFile(join(output, 'index.html'), 'utf8');
+  assert.ok(html.includes('<title>Cache $&amp; $` and $&#39;</title>'));
   assert.doesNotMatch(html, /(?:name|property)="(?:og:|twitter:)?description"/);
 });
 
@@ -93,6 +97,48 @@ test('an invalid source preserves the previous build', async t => {
   await writeFile(manifestPath, JSON.stringify(manifest));
   await assert.rejects(buildSite(path), /duplicate lesson ID "read-through-a-cache"/);
   assert.deepEqual(await readFile(join(output, 'course.json')), before);
+});
+
+test('an active build blocks a second build or import', async t => {
+  const path = await fixture(t);
+  const output = await buildSite(path);
+  const index = join(output, 'index.html');
+  const original = await readFile(index, 'utf8');
+  const buildGate = new EventEmitter();
+  const started = once(buildGate, 'started');
+  const firstBuild = buildSite(path, { async customize({ site }) {
+    const resume = once(buildGate, 'resume');
+    buildGate.emit('started');
+    await resume;
+    await writeFile(join(site, 'index.html'), '<h1>First build</h1>');
+  } });
+  await Promise.race([firstBuild, started]);
+  try {
+    await assert.rejects(buildSite(path), /A build, import, or Studio save is active/);
+    await assert.rejects(ingestBundle(join(example, 'ingest/course.json'), path), { status: 409 });
+    assert.equal(await readFile(index, 'utf8'), original);
+  } finally {
+    buildGate.emit('resume');
+    await firstBuild;
+  }
+  assert.equal(await readFile(index, 'utf8'), '<h1>First build</h1>');
+  await buildSite(path);
+  assert.equal(await readFile(index, 'utf8'), original);
+});
+
+test('the compiler checks that the manifest and lessons are local UTF-8 files', async t => {
+  const path = await fixture(t);
+  const manifest = join(path, 'content/course.json');
+  const manifestSource = await readFile(manifest);
+  await rm(manifest);
+  await symlink(join(example, 'content/course.json'), manifest);
+  await assert.rejects(compileCourse(path), /cannot read content\/course\.json: .*without symbolic links/);
+  await rm(manifest);
+  await writeFile(manifest, manifestSource);
+
+  const lesson = join(path, 'content/lessons/read-through-a-cache.md');
+  await writeFile(lesson, Buffer.from([0xff]));
+  await assert.rejects(compileCourse(path), /cannot read content\/lessons\/read-through-a-cache\.md: .*utf-8/i);
 });
 
 test('assets must exist and must be regular files inside public', async t => {
@@ -162,6 +208,7 @@ test('direct links resolve steps and clamp numbers to lesson bounds', () => {
   const lessons = [{ id: 'first', steps: ['a'] }, { id: 'second', steps: ['a', 'b'] }];
   assert.equal(getRoute('', lessons), null);
   assert.equal(getRoute('#/', lessons), null);
+  assert.equal(getRoute('#/unknown/1', []), null);
   assert.equal(lessonHref('second', 1), '#/second/2');
   assert.deepEqual(getRoute('#/second/20', lessons), { lesson: lessons[1], index: 1, step: 1 });
   assert.deepEqual(getRoute('#/unknown/8', lessons), { lesson: lessons[0], index: 0, step: 0 });
@@ -244,6 +291,8 @@ test('a custom shell receives validated content and preserves the previous build
   await assert.rejects(readFile(join(output, 'course.json')), { code: 'ENOENT' });
   await assert.rejects(buildSite(path, { shell() {}, customize() {} }), /Choose either shell or customize/);
   await assert.rejects(buildSite(path, { shell: async () => { throw new Error('shell failed'); } }), /shell failed/);
+  assert.equal(await readFile(join(output, 'index.html'), 'utf8'), before);
+  await assert.rejects(buildSite(path, { shell: ({ site }) => rm(site, { recursive: true }) }), { code: 'ENOENT' });
   assert.equal(await readFile(join(output, 'index.html'), 'utf8'), before);
 });
 

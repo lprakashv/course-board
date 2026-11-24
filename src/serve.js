@@ -1,5 +1,5 @@
 import { createServer } from 'node:http';
-import { readFile } from 'node:fs/promises';
+import { readFile, realpath, stat } from 'node:fs/promises';
 import { extname, resolve, sep } from 'node:path';
 import { buildSite } from './build.js';
 
@@ -19,25 +19,35 @@ export async function serve(directory, { dev, port, customize }) {
       response.writeHead(405, { Allow: 'GET, HEAD' }).end();
       return;
     }
-    let path;
+    let requestPath;
     try {
-      path = decodeURIComponent(new URL(request.url, 'http://localhost').pathname);
+      requestPath = decodeURIComponent(new URL(request.url, 'http://localhost').pathname);
     } catch {
       response.writeHead(400).end('Invalid path');
       return;
     }
-    if (path === '/') path = '/index.html';
-    const file = resolve(output, '.' + path);
-    if (!file.startsWith(output + sep) || path.includes('\0')) {
+    if (requestPath === '/') requestPath = '/index.html';
+    const file = resolve(output, '.' + requestPath);
+    if (!file.startsWith(output + sep) || requestPath.includes('\0')) {
       response.writeHead(404).end('File not found');
       return;
     }
+    const rebuild = dev && requestPath === '/index.html';
     try {
-      if (dev && path === '/index.html') {
+      if (rebuild) {
         pendingBuild ??= buildSite(directory, { customize }).finally(() => { pendingBuild = undefined; });
         await pendingBuild;
+      } else if (pendingBuild) {
+        // On build failure, assets can still come from the last successful build.
+        await pendingBuild.catch(() => {});
       }
-      const data = await readFile(file);
+      const outputPath = await realpath(output);
+      const filePath = await realpath(file);
+      if (!filePath.startsWith(outputPath + sep) || !(await stat(filePath)).isFile()) {
+        response.writeHead(404).end('File not found');
+        return;
+      }
+      const data = await readFile(filePath);
       response.writeHead(200, {
         'Content-Type': mimeTypes.get(extname(file)) ?? 'application/octet-stream',
         'Cache-Control': 'no-store',
@@ -45,7 +55,7 @@ export async function serve(directory, { dev, port, customize }) {
       });
       response.end(request.method === 'HEAD' ? undefined : data);
     } catch (error) {
-      const missing = ['ENOENT', 'EISDIR'].includes(error.code) && !(dev && path === '/index.html');
+      const missing = ['ENOENT', 'EISDIR'].includes(error.code) && !rebuild;
       response.writeHead(missing ? 404 : 500, { 'Content-Type': 'text/plain; charset=utf-8' });
       response.end(missing ? 'File not found' : error.message);
     }

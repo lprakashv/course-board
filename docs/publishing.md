@@ -16,30 +16,32 @@ npm pack --dry-run
 npm pack
 ```
 
-Check the file list from the dry run. Expect source modules, schemas, example sources, and docs. The pack command creates `lprakashv-course-board-0.3.1.tgz`. Install it in a scratch course with the [authoring guide](authoring.md#1-install-course-board). A relative tarball path works while both projects are on the same machine. For CI, use a published GitHub Release URL, an npm release, or an archive committed inside the course repository. Commit the resulting lockfile. [npm pack documentation](https://docs.npmjs.com/cli/v11/commands/npm-pack/)
+Check the file list from the dry run. Expect source modules, schemas, example sources, and docs. The pack command creates `lprakashv-course-board-0.3.2.tgz`. Install it in a scratch course with the [authoring guide](authoring.md#1-install-course-board). A relative tarball path works while both projects are on the same machine. For CI, use a published GitHub Release URL, an npm release, or an archive committed inside the course repository. Commit the resulting lockfile. [npm pack documentation](https://docs.npmjs.com/cli/v11/commands/npm-pack/)
 
 ## 2. Publish a GitHub Release
 
 The [CI and release workflow](../.github/workflows/ci.yml) checks pull requests and pushes to `main`. A pushed version tag runs the same checks on Node.js 20.19 and 22. If both pass, the workflow packs the tagged source and attaches the `.tgz` to the GitHub Release. The tag must match the stable version in `package.json` at the tagged commit. A later version change does not change an existing tag. If a tag has the wrong package version, commit the corrected version and publish a new, unused version tag.
 
-The [showcase workflow](../.github/workflows/showcase.yml) builds the example and the latest `main` of each public course repository and captures their local builds. After the CI workflow passes on a push to `main`, it publishes only the three images to the `showcase-images` branch. It can also run manually. Only the image publishing job can write repository contents. The README shows the checked-in example preview, which links to the latest capture from CI. The two public course screenshots appear in the README after the first successful showcase run. GitHub image caches can delay updates. A failed course build leaves the previous images in place.
-
-## Protect the source branch
-
-In GitHub settings, protect `main` with a branch ruleset or branch protection rule. Require pull requests and both `check (20.19.0)` and `check (22)` status checks from the Course Board CI and Release workflow. Block force pushes and deletion. Apply the rule to administrators where available. Require review when another reviewer is available; a solo maintainer must account for GitHub's review requirements before enabling it. Do not require the showcase workflow as a merge check: it runs after pushes and manual dispatch, not on pull requests. Keep the `showcase-images` branch separate from `main`; it contains generated images only. Review the repository's Actions settings and allow the workflow token to write contents for the release and screenshot jobs. [GitHub branch protection](https://docs.github.com/en/repositories/configuring-branches-and-merges-in-your-repository/managing-protected-branches/about-protected-branches)
-
 1. Set the release version in `package.json` and update `package-lock.json` with `npm install --package-lock-only` when the version changes. Run the [local checks](#1-test-the-package-locally). Commit the version and release changes to `main`.
-2. Push the release commit before the tag. In this example, version `0.3.1` is already set. Use the actual release version for both tag commands.
+2. Push the release commit before the tag. In this example, version `0.3.2` is already set. Use the actual release version for both tag commands.
 
    ```sh
    git push origin main
-   git tag -a v0.3.1 -m "Release 0.3.1"
-   git push origin v0.3.1
+   git tag -a v0.3.2 -m "Release 0.3.2"
+   git push origin v0.3.2
    ```
 
 3. In GitHub, check the **Course Board CI and Release** run for the tag. Then open **Releases** and check that the version has the expected `.tgz`. Download the archive and install it in a scratch project as in step 1. If the workflow stops during publishing, check the release and its assets before you retry the job. [GitHub Release CLI reference](https://cli.github.com/manual/gh_release_create)
 
 This workflow publishes the archive to [GitHub Releases](https://github.com/lprakashv/course-board/releases). The npm registry and the course sites have their own publishing steps below.
+
+### Protect the source branch
+
+In GitHub settings, protect `main` with a branch ruleset or branch protection rule. Require pull requests and both `check (20.19.0)` and `check (22)` from the CI workflow. Block force pushes and deletion. Apply the rule to administrators where available. Require review when another reviewer is available. Give the release and screenshot publishing jobs permission to write repository contents. [GitHub branch protection](https://docs.github.com/en/repositories/configuring-branches-and-merges-in-your-repository/managing-protected-branches/about-protected-branches)
+
+### Refresh showcase images
+
+The [showcase workflow](../.github/workflows/showcase.yml) runs after CI passes on a push to `main`. You can also run it manually from **Actions**. It builds the example and the latest `main` of each public course, then writes three screenshots to `showcase-images`. If a course build fails, the previous images stay available. GitHub can cache older images. Use the CI workflow for pull request checks.
 
 ## 3. Publish a version to npm
 
@@ -59,7 +61,7 @@ This workflow publishes the archive to [GitHub Releases](https://github.com/lpra
 
 ## 4. Deploy a course to GitHub Pages
 
-1. In the course repository, install the package and add the course scripts from the [authoring guide](authoring.md). Build the site locally and check `dist/index.html`, `dist/course.json` and the assets in `dist/media/` when the course uses media.
+1. In the course repository, install the package and add the course scripts. Commit the lockfile so the workflow can use `npm ci`. Run the production build and preview it locally. Check a direct step link and its diagram. For a different static host, upload the contents of `dist/`. [Authoring and production preview](authoring.md#7-validate-and-preview-production)
 2. Copy the template into the course repository.
 
    ```sh

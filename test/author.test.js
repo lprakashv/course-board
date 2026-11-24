@@ -108,3 +108,26 @@ test('Studio saves a scene and its SVG and rejects invalid or stale edits', asyn
   assert.equal(await readFile(lessonPath, 'utf8'), source);
   assert.equal(await readFile(join(root, 'public/other/keep.txt'), 'utf8'), 'Keep');
 });
+
+test('Studio keeps unlisted lesson files and detects manifest edits', async t => {
+  const root = await fixture(t);
+  await ingestBundle(example, root);
+  const opened = await readDraft(root);
+  const manifestPath = join(root, 'content/course.json');
+  const manifestSource = await readFile(manifestPath, 'utf8');
+  await writeFile(manifestPath, manifestSource.trimEnd());
+  const { manifest, lessons, revision } = opened;
+  await assert.rejects(saveDraft(root, { manifest, lessons }, new Map(), { revision }), /changed on disk/);
+
+  const current = await readDraft(root);
+  const lessonId = 'archived-lesson';
+  const lessonPath = join(root, 'content/lessons', `${lessonId}.md`);
+  const original = '---\ntitle: Archived lesson\n---\n## Keep\nOriginal text.\n';
+  await writeFile(lessonPath, original);
+  current.manifest.chapters[0].lessons.push(lessonId);
+  current.lessons.push({ id: lessonId, title: 'New lesson', steps: [{ title: 'Start', text: 'New text.' }] });
+  await assert.rejects(saveDraft(root, { manifest: current.manifest, lessons: current.lessons }, new Map(),
+    { revision: current.revision }), /Lesson ID "archived-lesson" already has a source file/);
+  assert.equal(await readFile(lessonPath, 'utf8'), original);
+  assert.equal((await readDraft(root)).revision, current.revision);
+});

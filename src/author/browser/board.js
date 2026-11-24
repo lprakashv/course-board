@@ -5,19 +5,20 @@ import '@excalidraw/excalidraw/index.css';
 
 export function mountBoard(container, onReady) {
   const root = createRoot(container);
-  let api;
-  let version = 0;
+  let editorApi;
+  let sceneVersion = 0;
   let closed = false;
 
   async function load(file) {
     const initialData = file ? { ...await loadFromBlob(file, null, null), scrollToContent: true } : undefined;
     if (closed) return;
-    api = undefined;
+    editorApi = undefined;
     root.render(createElement(Excalidraw, {
-      key: ++version,
+      key: ++sceneVersion,
       initialData,
       excalidrawAPI(value) {
-        api = value;
+        if (closed || !value) return;
+        editorApi = value;
         onReady();
       },
       UIOptions: { canvasActions: { loadScene: false, saveAsImage: false, export: false } },
@@ -25,10 +26,11 @@ export function mountBoard(container, onReady) {
   }
 
   async function exportBoard() {
-    const elements = api.getSceneElements();
+    if (!editorApi) throw new Error('Wait for the whiteboard to finish loading.');
+    const elements = editorApi.getSceneElements();
     if (!elements.length) throw new Error('Draw or import at least one element.');
-    const appState = api.getAppState();
-    const files = api.getFiles();
+    const appState = editorApi.getAppState();
+    const files = editorApi.getFiles();
     const scene = serializeAsJSON(elements, appState, files, 'local');
     const svg = await exportToSvg({ elements, files, appState: { ...appState, exportEmbedScene: false } });
     return {

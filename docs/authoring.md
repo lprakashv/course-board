@@ -7,19 +7,19 @@ Use Node.js 20.19 or later. Create a project with `npm init -y` if it has no `pa
 For local development, use the [package tarball](publishing.md#1-test-the-package-locally). From a new course directory beside the `course-board` directory, run:
 
 ```sh
-npm install --save-dev --save-exact ../course-board/lprakashv-course-board-0.3.1.tgz
+npm install --save-dev --save-exact ../course-board/lprakashv-course-board-0.3.2.tgz
 ```
 
 After the GitHub Release is available, a course can install the versioned asset URL. Use this option when the course's CI can access the release.
 
 ```sh
-npm install --save-dev --save-exact https://github.com/lprakashv/course-board/releases/download/v0.3.1/lprakashv-course-board-0.3.1.tgz
+npm install --save-dev --save-exact https://github.com/lprakashv/course-board/releases/download/v0.3.2/lprakashv-course-board-0.3.2.tgz
 ```
 
 After the package is on npm, install the release instead:
 
 ```sh
-npm install --save-dev --save-exact @lprakashv/course-board@0.3.1
+npm install --save-dev --save-exact @lprakashv/course-board@0.3.2
 ```
 
 ## 2. Add the starter content and scripts
@@ -75,7 +75,7 @@ Edit `content/course.json`. The chapter list and its lesson ID lists set the ord
 ```
 
 - Use lowercase letters, digits, and single hyphens in course and lesson IDs. Each lesson ID must be unique within a course.
-- Use `content/lessons/<id>.md` for each lesson. Numbered links use `#/<id>/<step-number>`, with step numbers starting at 1. Keep published order stable for readers who use these links.
+- Use `content/lessons/<id>.md` for each lesson. Store the manifest and lessons as regular UTF-8 files under `content/`. Keep symbolic links out of their paths. Numbered links use `#/<id>/<step-number>`, with step numbers starting at 1. Keep published order stable for readers who use these links.
 - Use `theme` and `extension` to reference optional files in `public/`. The files are copied to `dist/media/`.
 - The default site opens on a course index that lists all chapters and lessons. Select **Home** to return to it. The index credits Course Board.
 - The build puts the course `title` and optional `description` in the HTML and social preview metadata. Social sites see the same course title for all step links because fragment routes share one HTML page. Custom full shells must supply their own metadata.
@@ -194,7 +194,7 @@ Use `diagram: { type: custom, name: queue-depth, alt: Four items are queued, dat
 
 On wide screens, the default shell gives the whiteboard most of the width. Drag the dividers to change the outline or reading width. With a divider in focus, press Left or Right to resize, or Home or End to set its minimum or maximum width. The browser saves these widths. On narrow screens, the board sits above the reading pane. The shell prepares file-based boards for the previous and next steps so that navigation can reuse them.
 
-Extensions run as trusted browser code. Use `textContent` for dynamic text inside a custom element, or use `escapeHtml` when you return markup. The build validates the extension path and renderer name syntax. The browser looks up the exported renderer when the step opens. All files in `public/` become public.
+Extensions run as trusted browser code. Use `textContent` for dynamic text inside a custom element, or use `escapeHtml` when you return markup. The build validates the extension path and renderer name syntax. The browser looks up the exported renderer when the step opens. If the extension fails to load, readers can still open lessons and built-in diagrams. Custom diagrams show a renderer error. Check the browser console for details about extension and navigation hook errors. All files in `public/` become public.
 
 ## 7. Validate and preview production
 
@@ -270,7 +270,7 @@ course-board preview
 
 Run these as npm scripts or with `npm exec --`. The optional project directory comes after the command. Resolve a relative customization path from that directory. The module is trusted Node.js code and runs when you explicitly select it. In development, reload the page after edits to the course, public assets, or files that the callback reads. Restart the server after edits to the customization module or its Node.js imports. Production preview serves the last build.
 
-The Node API uses the same callback. Import it and call `buildSite(directory, { customize })`. A failure in the compiler or callback preserves the previous `dist/`.
+The Node API uses the same callback. Import it and call `buildSite(directory, { customize })`. A failure in the compiler or callback preserves the previous `dist/`. A course directory allows one build, import, or Studio save at a time. If a command reports that another operation is active, wait for it to finish, then retry. If an interrupted command leaves `.course-board-write-lock/`, confirm that no operation is active before you remove that empty directory.
 
 ### Own the full build output
 

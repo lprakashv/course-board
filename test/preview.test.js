@@ -1,7 +1,7 @@
 import assert from 'node:assert/strict';
 import { execFileSync, spawn } from 'node:child_process';
 import { once } from 'node:events';
-import { cp, mkdtemp, readFile, rm, writeFile } from 'node:fs/promises';
+import { cp, mkdtemp, readFile, rm, symlink, writeFile } from 'node:fs/promises';
 import { tmpdir } from 'node:os';
 import { join } from 'node:path';
 import { createInterface } from 'node:readline';
@@ -51,6 +51,8 @@ test('CLI shares customization with dev and serves the staged build in preview',
     }
   `);
   const args = [root, '--customize', hook];
+  assert.throws(() => execFileSync(process.execPath, [cli, 'preview', root], { stdio: 'pipe' }),
+    /No build to preview/);
   execFileSync(process.execPath, [cli, 'build', ...args]);
   const index = join(root, 'dist', 'index.html');
   assert.equal(await readFile(index, 'utf8'), '<h1>First build</h1>');
@@ -61,6 +63,12 @@ test('CLI shares customization with dev and serves the staged build in preview',
   const published = await fetch(preview);
   assert.equal(published.status, 200);
   assert.equal(await published.text(), '<h1>First build</h1>');
+  await symlink(message, join(root, 'dist', 'outside.txt'));
+  const outside = await fetch(new URL('outside.txt', preview));
+  assert.equal(outside.status, 404);
+  const head = await fetch(preview, { method: 'HEAD' });
+  assert.equal(head.status, 200);
+  assert.equal(await head.text(), '');
 
   const url = await launchPreview(t, ['dev', ...args]);
   const edited = await fetch(url);

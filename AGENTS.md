@@ -13,6 +13,7 @@ Define user-visible changes in the owning guide, schema, or example before you c
 | [`schemas/`](schemas/) | JSON Schema for the course manifest, lesson front matter, and step metadata |
 | [`src/content.js`](src/content.js) | Parse Markdown and YAML, validate input, and compile the course model |
 | [`src/build.js`](src/build.js) | Build the static site and copy the standalone renderer for an existing app |
+| [`src/project-lock.js`](src/project-lock.js) | Coordinate builds, imports, and Studio saves |
 | [`src/cli.js`](src/cli.js), [`src/serve.js`](src/serve.js) | Command entry points and local preview |
 | [`src/author/`](src/author/) | Validated source writes, CLI import, and the local Studio server |
 | [`src/index.js`](src/index.js), [`package.json`](package.json) | Public Node exports, browser export, and package contents |
@@ -25,6 +26,13 @@ Define user-visible changes in the owning guide, schema, or example before you c
 - Keep the renderer-only adoption path compatible with existing course shells. Custom renderers return plain markup strings. Preserve the markup and controls that callers use unless the request changes that contract. See the [migration guide](docs/migrations.md).
 - Validate data at the compiler boundary. Keep raw HTML disabled in Markdown, escape dynamic labels, and keep standalone HTML diagrams sandboxed. Treat browser extensions as trusted code. Files in `public/` are published.
 - Keep build output consistent after an error. Keep generated `dist/` directories, `node_modules/`, and package archives out of Git.
+
+## Make flows easy to follow
+
+- Give functions, variables, and state names that explain their purpose. Add a short comment when the reason for an operation is not clear from the code.
+- Separate validation, staging, publishing, and recovery where this makes a flow easier to read. Use straightforward control flow and avoid clever shortcuts.
+- Handle invalid input, unavailable resources, concurrent operations, and runtime errors at the relevant boundaries. Preserve existing files and the last successful build when an operation fails.
+- Keep setup, build, preview, package, and deployment instructions current and repeatable. Validate changed commands and report any checks that could not run.
 
 ## Verify the change
 

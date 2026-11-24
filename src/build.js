@@ -2,6 +2,7 @@ import { copyFile, mkdir, mkdtemp, readFile, rename, rm, writeFile } from 'node:
 import { dirname, join, resolve } from 'node:path';
 import { assetUrl, escapeHtml } from './browser/diagrams.js';
 import { readProject } from './content.js';
+import { acquireProjectLock } from './project-lock.js';
 
 export async function copyDiagramRenderer(file) {
   const target = resolve(file);
@@ -60,21 +61,38 @@ function analyticsMarkup(settings) {
   return scripts.join('\n  ');
 }
 
+function renderIndex(template, course, analytics) {
+  const title = escapeHtml(course.title);
+  const metadata = [
+    `<title>${title}</title>`,
+    `<meta property="og:title" content="${title}">`,
+    `<meta name="twitter:title" content="${title}">`,
+  ];
+  if (course.description) {
+    const description = escapeHtml(course.description);
+    metadata.push(
+      `<meta name="description" content="${description}">`,
+      `<meta property="og:description" content="${description}">`,
+      `<meta name="twitter:description" content="${description}">`,
+    );
+  }
+  const attributes = `data-course-id="${escapeHtml(course.id)}" data-theme="${escapeHtml(course.preset ?? 'classic')}"`;
+  const indexParts = {
+    'data-course-attributes': `${attributes}${course.theme ? ' data-custom-theme' : ''}`,
+    '<!-- Course metadata -->': metadata.join('\n  '),
+    '<!-- Custom theme -->': course.theme ? `<link rel="stylesheet" href="${escapeHtml(assetUrl(course.theme))}">` : '',
+    '<!-- Analytics -->': analyticsMarkup(analytics),
+  };
+  // Replace only placeholders from the template and insert values literally.
+  return template.replace(/data-course-attributes|<!-- (?:Course metadata|Custom theme|Analytics) -->/g,
+    placeholder => indexParts[placeholder]);
+}
+
 async function stageDefaultSite({ root, site, course }, files, analytics) {
   const browser = join(site, '_board');
   await copyBrowserShell(browser);
   const template = await readFile(new URL('./browser/index.html', import.meta.url), 'utf8');
-  const themeLink = course.theme
-    ? `<link rel="stylesheet" href="${escapeHtml(assetUrl(course.theme))}">` : '';
-  const attributes = `data-course-id="${escapeHtml(course.id)}" data-theme="${escapeHtml(course.preset ?? 'classic')}"`;
-  const title = escapeHtml(course.title);
-  const description = course.description ? escapeHtml(course.description) : '';
-  const metadata = `<title>${title}</title>\n  <meta property="og:title" content="${title}">\n  <meta name="twitter:title" content="${title}">${description ? `\n  <meta name="description" content="${description}">\n  <meta property="og:description" content="${description}">\n  <meta name="twitter:description" content="${description}">` : ''}`;
-  const index = template.replace('data-course-attributes', `${attributes}${course.theme ? ' data-custom-theme' : ''}`)
-    .replace('<!-- Course metadata -->', metadata)
-    .replace('<!-- Custom theme -->', themeLink)
-    .replace('<!-- Analytics -->', analyticsMarkup(analytics));
-  await writeFile(join(site, 'index.html'), index);
+  await writeFile(join(site, 'index.html'), renderIndex(template, course, analytics));
   for (const file of ['course.css', 'favicon.svg']) {
     await copyFile(new URL(`./browser/${file}`, import.meta.url), join(browser, file));
   }
@@ -97,19 +115,46 @@ async function stageDefaultSite({ root, site, course }, files, analytics) {
   await writeFile(join(site, '.nojekyll'), '');
 }
 
+async function publishSite(root, site, temporary) {
+  const output = join(root, 'dist');
+  // Keep recovery files outside the staging directory so cleanup cannot remove them.
+  const backup = `${temporary}-previous`;
+  let hasBackup = false;
+  try {
+    await rename(output, backup);
+    hasBackup = true;
+  } catch (error) {
+    if (error.code !== 'ENOENT') throw error;
+  }
+  try {
+    await rename(site, output);
+  } catch (error) {
+    if (hasBackup) {
+      try {
+        await rename(backup, output);
+      } catch (restoreError) {
+        throw new Error(`Could not replace dist. Previous build is in ${backup}.`, { cause: restoreError });
+      }
+    }
+    throw error;
+  }
+  if (hasBackup) await rm(backup, { recursive: true, force: true });
+  return output;
+}
+
 export async function buildSite(directory = '.', { shell, customize, analytics = process.env } = {}) {
   if (!analytics || typeof analytics !== 'object' || Array.isArray(analytics)) throw new TypeError('analytics must be an object.');
+  if (shell && typeof shell !== 'function') throw new TypeError('shell must be a function.');
   if (customize !== undefined && typeof customize !== 'function') throw new TypeError('customize must be a function.');
   if (shell && customize) throw new Error('Choose either shell or customize.');
   const root = resolve(directory);
-  const { course, files } = await readProject(root);
-  const temporary = await mkdtemp(join(root, '.course-board-'));
-  const site = join(temporary, 'site');
-  const output = join(root, 'dist');
-  const backup = join(temporary, 'previous');
-  let discardTemporary = true;
+  const releaseLock = await acquireProjectLock(root);
+  let temporary;
   try {
-    await mkdir(site, { recursive: true });
+    const { course, files } = await readProject(root);
+    temporary = await mkdtemp(join(root, '.course-board-'));
+    const site = join(temporary, 'site');
+    await mkdir(site);
     const context = { root, site, course };
     if (shell) {
       await shell(context);
@@ -117,28 +162,12 @@ export async function buildSite(directory = '.', { shell, customize, analytics =
       await stageDefaultSite(context, files, analytics);
       if (customize) await customize(context);
     }
-    let hasBackup = false;
-    try {
-      await rename(output, backup);
-      hasBackup = true;
-    } catch (error) {
-      if (error.code !== 'ENOENT') throw error;
-    }
-    try {
-      await rename(site, output);
-    } catch (error) {
-      if (hasBackup) {
-        try {
-          await rename(backup, output);
-        } catch (restoreError) {
-          discardTemporary = false;
-          throw new Error(`Could not replace dist. Previous build is in ${backup}.`, { cause: restoreError });
-        }
-      }
-      throw error;
-    }
+    return await publishSite(root, site, temporary);
   } finally {
-    if (discardTemporary) await rm(temporary, { recursive: true, force: true });
+    try {
+      if (temporary) await rm(temporary, { recursive: true, force: true });
+    } finally {
+      await releaseLock();
+    }
   }
-  return output;
 }

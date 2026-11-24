@@ -1,35 +1,34 @@
-import { escapeHtml as html } from '../../browser/diagrams.js';
+import { escapeHtml } from '../../browser/diagrams.js';
 
-const $ = id => document.getElementById(id);
-const studio = $('studio');
-const workspace = $('workspace');
-const dialog = $('board-dialog');
+const byId = id => document.getElementById(id);
+const studio = byId('studio');
+const workspace = byId('workspace');
+const dialog = byId('board-dialog');
 const assets = new Map();
 const invalidLessonIds = new Map();
 const diagramTypes = { svg: 'svg', html: 'html', png: 'image', jpg: 'image', jpeg: 'image', gif: 'image', webp: 'image', avif: 'image' };
 
 let draft;
-let savedIds = new Set();
-let locationInCourse = { chapter: -1, lesson: null, step: 0 };
+let savedLessonIds = new Set();
+let selection = { chapterIndex: -1, lessonId: null, stepIndex: 0 };
 let dirty = false;
-let board;
-let boardStep;
+let boardSession;
 
-function report(message = '') {
-  $('error').textContent = message;
-  $('error').hidden = !message;
+function showError(message = '') {
+  byId('error').textContent = message;
+  byId('error').hidden = !message;
 }
 
-function edit() {
+function markEdited() {
   dirty = true;
-  $('save-state').textContent = 'Unsaved changes';
-  report();
+  byId('save-state').textContent = 'Unsaved changes';
+  showError();
 }
 
-function current() {
-  const chapter = draft.manifest.chapters[locationInCourse.chapter];
-  const lesson = draft.lessons.find(item => item.id === locationInCourse.lesson);
-  return { chapter, lesson, step: lesson?.steps[locationInCourse.step] };
+function getSelection() {
+  const chapter = draft.manifest.chapters[selection.chapterIndex];
+  const lesson = draft.lessons.find(item => item.id === selection.lessonId);
+  return { chapter, lesson, step: lesson?.steps[selection.stepIndex] };
 }
 
 function control(action, label, attributes = '') {
@@ -37,7 +36,7 @@ function control(action, label, attributes = '') {
 }
 
 function field(label, name, value, { multiline = false, wide = false, readOnly = false, invalid = false } = {}) {
-  const contents = html(value ?? '');
+  const contents = escapeHtml(value ?? '');
   const input = multiline ? `<textarea data-field="${name}" spellcheck="true">${contents}</textarea>`
     : `<input data-field="${name}" value="${contents}" ${readOnly ? 'readonly' : ''} ${invalid ? 'aria-invalid="true"' : ''}>`;
   return `<label class="field${wide ? ' wide' : ''}">${label}${input}</label>`;
@@ -51,19 +50,19 @@ function orderControls(entity, index, length) {
   </div>`;
 }
 
-function outline() {
+function renderOutline() {
   const chapters = draft.manifest.chapters.map((chapter, index) => {
-    const chapterCurrent = index === locationInCourse.chapter && !locationInCourse.lesson;
-    return `<li>${control('select-chapter', html(chapter.title || 'Untitled chapter'), `data-index="${index}" ${chapterCurrent ? 'aria-current="page"' : ''}`)}
+    const chapterCurrent = index === selection.chapterIndex && !selection.lessonId;
+    return `<li>${control('select-chapter', escapeHtml(chapter.title || 'Untitled chapter'), `data-index="${index}" ${chapterCurrent ? 'aria-current="page"' : ''}`)}
       ${chapter.lessons.length ? `<ul>${chapter.lessons.map(id => {
         const lesson = draft.lessons.find(item => item.id === id);
-        const active = id === locationInCourse.lesson;
-        return `<li>${control('select-lesson', html(lesson.title || 'Untitled lesson'), `data-index="${index}" data-id="${html(id)}" ${active ? 'aria-current="page"' : ''}`)}</li>`;
+        const active = id === selection.lessonId;
+        return `<li>${control('select-lesson', escapeHtml(lesson.title || 'Untitled lesson'), `data-index="${index}" data-id="${escapeHtml(id)}" ${active ? 'aria-current="page"' : ''}`)}</li>`;
       }).join('')}</ul>` : ''}</li>`;
   });
-  $('outline').innerHTML = chapters.length ? `<ul>${chapters.join('')}</ul>` : '<p class="hint">Add a chapter to start the outline.</p>';
+  byId('outline').innerHTML = chapters.length ? `<ul>${chapters.join('')}</ul>` : '<p class="hint">Add a chapter to start the outline.</p>';
   const settings = studio.querySelector('[data-action="settings"]');
-  if (locationInCourse.chapter === -1) settings.setAttribute('aria-current', 'page');
+  if (selection.chapterIndex === -1) settings.setAttribute('aria-current', 'page');
   else settings.removeAttribute('aria-current');
 }
 
@@ -83,7 +82,7 @@ function courseSettings() {
 }
 
 function chapterEditor(chapter) {
-  const index = locationInCourse.chapter;
+  const index = selection.chapterIndex;
   return `<h1 tabindex="-1">Chapter</h1><section class="panel" aria-label="Chapter settings">
     ${field('Chapter title', 'chapter:title', chapter.title)}
     <div class="actions">${control('add-lesson', '+ Lesson', 'class="primary"')}</div>
@@ -91,7 +90,7 @@ function chapterEditor(chapter) {
   </section>`;
 }
 
-function assetSource(path) {
+function assetPreviewUrl(path) {
   return assets.get(path)?.url ?? `/api/asset?path=${encodeURIComponent(path)}`;
 }
 
@@ -101,11 +100,11 @@ function diagramEditor(spec) {
   const kind = { excalidraw: 'Excalidraw scene', image: 'Image', svg: 'SVG image', html: 'HTML board', ascii: 'Text diagram', custom: 'Custom diagram' };
   const label = filename && !/^[a-f\d]{64}\./.test(filename) ? filename : kind[spec?.type];
   const preview = spec && ['image', 'svg', 'excalidraw'].includes(spec.type)
-    ? `<div class="diagram-preview"><img src="${html(assetSource(spec.src))}" alt="${html(spec.alt)}"></div>` : '';
+    ? `<div class="diagram-preview"><img src="${escapeHtml(assetPreviewUrl(spec.src))}" alt="${escapeHtml(spec.alt)}"></div>` : '';
   return `<section class="panel" aria-labelledby="diagram-heading">
     <div class="panel-heading"><h2 id="diagram-heading">Whiteboard</h2></div>
     ${spec ? `
-      <p class="board-path" title="${html(path ?? label)}">${html(label)}</p>${preview}
+      <p class="board-path" title="${escapeHtml(path ?? label)}">${escapeHtml(label)}</p>${preview}
       ${field('Alternative text', 'diagram:alt', spec.alt)}
       ${field('Caption', 'diagram:caption', spec.caption)}
       ${spec.type === 'ascii' ? field('Diagram text', 'diagram:text', spec.text, { multiline: true }) : ''}
@@ -119,19 +118,19 @@ function diagramEditor(spec) {
 }
 
 function lessonEditor(chapter, lesson, step) {
-  const index = locationInCourse.step;
-  return `<p class="crumb">${html(chapter.title)}</p><h1 tabindex="-1">Lesson</h1>
+  const index = selection.stepIndex;
+  return `<p class="crumb">${escapeHtml(chapter.title)}</p><h1 tabindex="-1">Lesson</h1>
     <section class="panel form-grid" aria-label="Lesson settings">
       ${field('Lesson title', 'lesson:title', lesson.title)}
       ${field('Lesson ID', 'lesson:id', invalidLessonIds.get(lesson) ?? lesson.id, {
-        readOnly: savedIds.has(lesson.id), invalid: invalidLessonIds.has(lesson),
+        readOnly: savedLessonIds.has(lesson.id), invalid: invalidLessonIds.has(lesson),
       })}
       ${field('Summary', 'lesson:summary', lesson.summary, { wide: true })}
       <div class="wide">${orderControls('lesson', chapter.lessons.indexOf(lesson.id), chapter.lessons.length)}</div>
     </section>
     <div class="step-bar">
       <nav class="step-tabs" aria-label="Steps">${lesson.steps.map((item, position) =>
-        control('select-step', `${position + 1}. ${html(item.title || 'Untitled step')}`, `data-index="${position}" ${position === index ? 'aria-current="step"' : ''}`)).join('')}</nav>
+        control('select-step', `${position + 1}. ${escapeHtml(item.title || 'Untitled step')}`, `data-index="${position}" ${position === index ? 'aria-current="step"' : ''}`)).join('')}</nav>
       ${control('add-step', '+ Step')}
     </div>
     ${step ? `<div class="step-layout">
@@ -144,28 +143,28 @@ function lessonEditor(chapter, lesson, step) {
     </div>` : '<p class="panel hint">Add a step to write the lesson.</p>'}`;
 }
 
-function render(focus) {
-  outline();
-  const { chapter, lesson, step } = current();
+function renderEditor(focus) {
+  renderOutline();
+  const { chapter, lesson, step } = getSelection();
   workspace.innerHTML = lesson ? lessonEditor(chapter, lesson, step) : chapter ? chapterEditor(chapter) : courseSettings();
   if (focus) (workspace.querySelector(focus) ?? workspace.querySelector('h1')).focus();
 }
 
-function select(chapter, lesson = null, step = 0, focus = 'h1') {
-  locationInCourse = { chapter, lesson, step };
-  render(focus);
+function selectEditor(chapterIndex, lessonId = null, stepIndex = 0, focus = 'h1') {
+  selection = { chapterIndex, lessonId, stepIndex };
+  renderEditor(focus);
 }
 
-function newLesson(chapter) {
+function addLesson(chapter) {
   let number = draft.lessons.length + 1;
-  while (savedIds.has(`lesson-${number}`) || draft.lessons.some(lesson => lesson.id === `lesson-${number}`)) number += 1;
+  while (savedLessonIds.has(`lesson-${number}`) || draft.lessons.some(lesson => lesson.id === `lesson-${number}`)) number += 1;
   const lesson = { id: `lesson-${number}`, title: 'New lesson', steps: [{ title: 'First step', text: '' }] };
   chapter.lessons.push(lesson.id);
   draft.lessons.push(lesson);
   return lesson;
 }
 
-function move(list, index, offset) {
+function moveItem(list, index, offset) {
   const target = index + offset;
   [list[index], list[target]] = [list[target], list[index]];
   return target;
@@ -174,19 +173,19 @@ function move(list, index, offset) {
 function changeOrder(action, chapter, lesson) {
   const [direction, entity] = action.split('-');
   const offset = direction === 'earlier' ? -1 : 1;
-  const selected = locationInCourse;
-  if (entity === 'chapter') selected.chapter = move(draft.manifest.chapters, selected.chapter, offset);
-  if (entity === 'lesson') move(chapter.lessons, chapter.lessons.indexOf(lesson.id), offset);
-  if (entity === 'step') selected.step = move(lesson.steps, selected.step, offset);
-  edit();
-  render(`[data-action="${action}"]:not(:disabled)`);
+  const selected = selection;
+  if (entity === 'chapter') selected.chapterIndex = moveItem(draft.manifest.chapters, selected.chapterIndex, offset);
+  if (entity === 'lesson') moveItem(chapter.lessons, chapter.lessons.indexOf(lesson.id), offset);
+  if (entity === 'step') selected.stepIndex = moveItem(lesson.steps, selected.stepIndex, offset);
+  markEdited();
+  renderEditor(`[data-action="${action}"]:not(:disabled)`);
 }
 
-function remove(action, chapter, lesson) {
-  const selected = locationInCourse;
+function removeItem(action, chapter, lesson) {
+  const selected = selection;
   if (action === 'remove-step') {
-    lesson.steps.splice(selected.step, 1);
-    selected.step = Math.max(0, Math.min(selected.step, lesson.steps.length - 1));
+    lesson.steps.splice(selected.stepIndex, 1);
+    selected.stepIndex = Math.max(0, Math.min(selected.stepIndex, lesson.steps.length - 1));
   } else {
     const ids = lesson ? [lesson.id] : chapter.lessons;
     if (!window.confirm(lesson ? 'Remove this lesson from the course?' : 'Remove this chapter and its lessons from the course?')) return;
@@ -196,80 +195,85 @@ function remove(action, chapter, lesson) {
       return false;
     });
     if (lesson) chapter.lessons = chapter.lessons.filter(id => id !== lesson.id);
-    else draft.manifest.chapters.splice(selected.chapter, 1);
-    selected.lesson = null;
-    if (!lesson) selected.chapter = -1;
+    else draft.manifest.chapters.splice(selected.chapterIndex, 1);
+    selected.lessonId = null;
+    if (!lesson) selected.chapterIndex = -1;
   }
-  edit();
-  render('h1');
+  markEdited();
+  renderEditor('h1');
 }
 
-studio.addEventListener('click', event => {
+function handleEditorClick(event) {
   const button = event.target.closest('button[data-action]');
   if (!button) return;
   const { action, index, id } = button.dataset;
-  const { chapter, lesson, step } = current();
-  const selected = locationInCourse;
+  const { chapter, lesson, step } = getSelection();
+  const selected = selection;
   switch (action) {
-    case 'settings': return select(-1);
-    case 'select-chapter': return select(Number(index));
-    case 'select-lesson': return select(Number(index), id);
-    case 'select-step': return select(selected.chapter, lesson.id, Number(index), '[data-field="step:title"]');
+    case 'settings': return selectEditor(-1);
+    case 'select-chapter': return selectEditor(Number(index));
+    case 'select-lesson': return selectEditor(Number(index), id);
+    case 'select-step': return selectEditor(selected.chapterIndex, lesson.id, Number(index), '[data-field="step:title"]');
     case 'add-chapter':
       draft.manifest.chapters.push({ title: 'New chapter', lessons: [] });
-      edit();
-      return select(draft.manifest.chapters.length - 1, null, 0, '[data-field="chapter:title"]');
+      markEdited();
+      return selectEditor(draft.manifest.chapters.length - 1, null, 0, '[data-field="chapter:title"]');
     case 'add-lesson': {
-      const newItem = newLesson(chapter);
-      edit();
-      return select(selected.chapter, newItem.id, 0, '[data-field="lesson:title"]');
+      const newLesson = addLesson(chapter);
+      markEdited();
+      return selectEditor(selected.chapterIndex, newLesson.id, 0, '[data-field="lesson:title"]');
     }
     case 'add-step':
       lesson.steps.push({ title: 'New step', text: '' });
-      edit();
-      return select(selected.chapter, lesson.id, lesson.steps.length - 1, '[data-field="step:title"]');
+      markEdited();
+      return selectEditor(selected.chapterIndex, lesson.id, lesson.steps.length - 1, '[data-field="step:title"]');
     case 'open-board': return openBoard(step);
     case 'remove-diagram':
       delete step.diagram;
-      edit();
-      return render('[data-action="open-board"]');
+      markEdited();
+      return renderEditor('[data-action="open-board"]');
+    case 'remove-chapter':
+    case 'remove-lesson':
+    case 'remove-step':
+      return removeItem(action, chapter, lesson);
     default:
-      if (action.startsWith('remove-')) return remove(action, chapter, lesson);
-      return changeOrder(action, chapter, lesson);
+      if (action.startsWith('earlier-') || action.startsWith('later-')) changeOrder(action, chapter, lesson);
   }
-});
+}
 
-studio.addEventListener('input', event => {
+function handleFieldInput(event) {
   const input = event.target;
   if (!input.dataset.field) return;
   const [group, key] = input.dataset.field.split(':');
-  const { chapter, lesson, step } = current();
+  const { chapter, lesson, step } = getSelection();
   if (group === 'lesson' && key === 'id') {
     const id = input.value.trim();
-    if (!/^[a-z0-9]+(?:-[a-z0-9]+)*$/.test(id) || draft.lessons.some(item => item !== lesson && item.id === id)) {
+    const used = savedLessonIds.has(id) || draft.lessons.some(item => item !== lesson && item.id === id);
+    if (input.readOnly) return;
+    if (!/^[a-z0-9]+(?:-[a-z0-9]+)*$/.test(id) || used) {
       invalidLessonIds.set(lesson, input.value);
       input.setAttribute('aria-invalid', 'true');
-      edit();
+      markEdited();
       return;
     }
     invalidLessonIds.delete(lesson);
     input.removeAttribute('aria-invalid');
     chapter.lessons[chapter.lessons.indexOf(lesson.id)] = id;
-    locationInCourse.lesson = id;
+    selection.lessonId = id;
   }
   const fields = { manifest: draft.manifest, chapter, lesson, step, diagram: step?.diagram };
   fields[group][key] = key === 'id' ? input.value.trim() : input.value;
-  if (group === 'lesson' || (group === 'chapter' && key === 'title')) outline();
+  if (group === 'lesson' || (group === 'chapter' && key === 'title')) renderOutline();
   if (group === 'step' && key === 'title') {
     const selected = workspace.querySelector('[aria-current="step"]');
-    selected.textContent = `${locationInCourse.step + 1}. ${input.value || 'Untitled step'}`;
+    selected.textContent = `${selection.stepIndex + 1}. ${input.value || 'Untitled step'}`;
   }
   if (group === 'diagram' && key === 'alt') {
     const image = workspace.querySelector('.diagram-preview img');
     if (image) image.alt = input.value;
   }
-  edit();
-});
+  markEdited();
+}
 
 async function addAsset(blob, type, extension) {
   if (!blob.size) throw new Error('The selected file is empty.');
@@ -280,7 +284,7 @@ async function addAsset(blob, type, extension) {
   return path;
 }
 
-function base64(blob) {
+function encodeUpload(blob) {
   return new Promise((done, reject) => {
     const reader = new FileReader();
     reader.onload = () => done(reader.result.split(',')[1]);
@@ -292,24 +296,28 @@ function base64(blob) {
 function replaceDiagram(step, fields) {
   const { alt = '', caption } = step.diagram ?? {};
   step.diagram = { ...fields, alt, ...(caption ? { caption } : {}) };
-  edit();
+  markEdited();
 }
 
-studio.addEventListener('change', async event => {
+function setEditorBusy(busy) {
+  studio.inert = busy;
+  byId('save').disabled = busy;
+}
+
+async function handleAttachment(event) {
   const { target } = event;
   if (!target.dataset.upload || !target.files[0]) return;
   const file = target.files[0];
   const extension = file.name.split('.').pop().toLowerCase();
-  const { step } = current();
+  const { step } = getSelection();
   target.value = '';
-  studio.inert = true;
-  $('save').disabled = true;
+  setEditorBusy(true);
   let focus;
   try {
     if (target.dataset.upload === 'theme') {
       if (extension !== 'css') throw new Error('Select a CSS file.');
       draft.manifest.theme = await addAsset(file, 'themes', extension);
-      edit();
+      markEdited();
       focus = '[data-field="manifest:theme"]';
     } else {
       if (!Object.hasOwn(diagramTypes, extension)) throw new Error('Select a supported image, SVG, or HTML file.');
@@ -318,16 +326,15 @@ studio.addEventListener('change', async event => {
       focus = '[data-field="diagram:alt"]';
     }
   } catch (error) {
-    report(error.message);
+    showError(error.message);
   } finally {
-    studio.inert = false;
-    $('save').disabled = false;
-    if (focus) render(focus);
+    setEditorBusy(false);
+    if (focus) renderEditor(focus);
     else target.focus();
   }
-});
+}
 
-async function result(response) {
+async function readApiResponse(response) {
   const data = await response.json();
   if (!response.ok) throw new Error(data.error);
   return data;
@@ -336,153 +343,185 @@ async function result(response) {
 function setDraft(value) {
   draft = value;
   invalidLessonIds.clear();
-  savedIds = new Set(draft.lessons.map(item => item.id));
+  savedLessonIds = new Set(draft.lessons.map(item => item.id));
   dirty = false;
-  $('save-state').textContent = draft.revision ? 'Saved to disk' : 'New course';
+  byId('save-state').textContent = draft.revision ? 'Saved to disk' : 'New course';
 }
 
-$('save').addEventListener('click', async () => {
+function removeBlankFields(item, keys) {
+  for (const key of keys) {
+    if (typeof item[key] === 'string' && !item[key].trim()) delete item[key];
+  }
+}
+
+async function prepareSaveRequest() {
+  const { manifest, lessons, revision } = structuredClone(draft);
+  removeBlankFields(manifest, ['description', 'theme']);
+  const references = new Set([manifest.theme]);
+  for (const lesson of lessons) {
+    removeBlankFields(lesson, ['summary']);
+    for (const { diagram } of lesson.steps) {
+      if (!diagram) continue;
+      removeBlankFields(diagram, ['caption']);
+      references.add(diagram.src);
+      references.add(diagram.source);
+    }
+  }
+  const uploads = {};
+  for (const path of references) {
+    const asset = assets.get(path);
+    if (asset) uploads[path] = await encodeUpload(asset.blob);
+  }
+  return { manifest, lessons, assets: uploads, revision };
+}
+
+async function saveCourse() {
   if (invalidLessonIds.size) {
     const [lesson] = invalidLessonIds.keys();
     const chapter = draft.manifest.chapters.findIndex(item => item.lessons.includes(lesson.id));
-    select(chapter, lesson.id, 0, '[data-field="lesson:id"]');
-    return report('Use a unique lesson ID with lowercase letters, digits, and single hyphens.');
+    selectEditor(chapter, lesson.id, 0, '[data-field="lesson:id"]');
+    return showError('Use an unused lesson ID with lowercase letters, digits, and single hyphens.');
   }
-  $('save').disabled = true;
-  studio.inert = true;
-  $('save-state').textContent = 'Saving…';
-  report();
+  setEditorBusy(true);
+  byId('save-state').textContent = 'Saving…';
+  showError();
   try {
-    const { manifest, lessons, revision } = structuredClone(draft);
-    const optional = (item, keys) => {
-      for (const key of keys) if (typeof item[key] === 'string' && !item[key].trim()) delete item[key];
-    };
-    optional(manifest, ['description', 'theme']);
-    const references = new Set([manifest.theme]);
-    for (const lesson of lessons) {
-      optional(lesson, ['summary']);
-      for (const { diagram } of lesson.steps) {
-        if (!diagram) continue;
-        optional(diagram, ['caption']);
-        references.add(diagram.src);
-        references.add(diagram.source);
-      }
-    }
-    const uploads = {};
-    for (const path of references) {
-      if (assets.has(path)) uploads[path] = await base64(assets.get(path).blob);
-    }
+    const payload = await prepareSaveRequest();
     const response = await fetch('/api/course', {
       method: 'PUT', headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ manifest, lessons, assets: uploads, revision }),
+      body: JSON.stringify(payload),
     });
-    setDraft(await result(response));
+    setDraft(await readApiResponse(response));
     for (const { url } of assets.values()) URL.revokeObjectURL(url);
     assets.clear();
-    render();
+    renderEditor();
   } catch (error) {
-    $('save-state').textContent = dirty ? 'Unsaved changes' : 'Save failed';
-    report(error.message);
+    byId('save-state').textContent = dirty ? 'Unsaved changes' : 'Save failed';
+    showError(error.message);
   } finally {
-    studio.inert = false;
-    $('save').disabled = false;
-    $('save').focus();
+    setEditorBusy(false);
+    byId('save').focus();
   }
-});
-
-function boardStatus(message = '') {
-  $('board-status').hidden = !message;
-  $('board-status').textContent = message;
 }
 
-function boardReady(ready) {
-  $('apply-board').disabled = !ready;
-  $('scene-file').disabled = !ready;
+function showBoardStatus(message = '') {
+  byId('board-status').hidden = !message;
+  byId('board-status').textContent = message;
+}
+
+function setBoardReady(ready) {
+  byId('apply-board').disabled = !ready;
+  byId('scene-file').disabled = !ready;
 }
 
 async function openBoard(step) {
-  boardStep = step;
-  boardReady(false);
-  boardStatus('Opening board…');
+  clearBoardSession();
+  const session = { step, editor: undefined, controller: new AbortController() };
+  boardSession = session;
+  setBoardReady(false);
+  showBoardStatus('Opening board…');
   dialog.showModal();
   const source = step.diagram?.source;
   try {
     window.EXCALIDRAW_ASSET_PATH = `${location.origin}/`;
     const { mountBoard } = await import('./board.js');
+    if (!isOpenBoard(session)) return;
+    session.editor = mountBoard(byId('drawing'), () => {
+      if (isOpenBoard(session)) setBoardReady(true);
+    });
     let file = assets.get(source)?.blob;
-    if (!dialog.open || boardStep !== step) return;
-    board = mountBoard($('drawing'), () => boardReady(true));
     if (source && !file) {
-      const response = await fetch(assetSource(source));
+      const response = await fetch(assetPreviewUrl(source), { signal: session.controller.signal });
       if (!response.ok) throw new Error('Could not read the saved scene. Import its source to continue.');
       file = await response.blob();
     }
-    if (!dialog.open || boardStep !== step) return;
-    await board.load(file);
-    boardStatus(step.diagram?.type === 'excalidraw' && !source ? 'Import the source file to edit the existing SVG board.' : '');
+    if (!isOpenBoard(session)) return;
+    await session.editor.load(file);
+    if (!isOpenBoard(session)) return;
+    showBoardStatus(step.diagram?.type === 'excalidraw' && !source ? 'Import the source file to edit the existing SVG board.' : '');
   } catch (error) {
-    if (!dialog.open || boardStep !== step) return;
-    boardStatus(error.message);
-    $('scene-file').disabled = !board;
+    if (!isOpenBoard(session)) return;
+    showBoardStatus(error.message);
+    byId('scene-file').disabled = !session.editor;
   }
 }
 
-$('scene-file').addEventListener('change', async event => {
+function isOpenBoard(session) {
+  return dialog.open && boardSession === session;
+}
+
+function clearBoardSession() {
+  if (!boardSession) return;
+  boardSession.controller.abort();
+  boardSession.editor?.close();
+  boardSession = undefined;
+}
+
+async function importBoardScene(event) {
   const file = event.target.files[0];
   event.target.value = '';
-  if (!file || !board) return;
-  const active = board;
-  const canApply = !$('apply-board').disabled;
-  boardReady(false);
+  const session = boardSession;
+  if (!file || !session?.editor) return;
+  const canApply = !byId('apply-board').disabled;
+  setBoardReady(false);
   try {
-    await active.load(file);
-    if (board === active) boardStatus(`Imported ${file.name}.`);
+    await session.editor.load(file);
+    if (isOpenBoard(session)) showBoardStatus(`Imported ${file.name}.`);
   } catch (error) {
-    if (board !== active) return;
-    boardStatus(error.message);
-    boardReady(canApply);
-    $('scene-file').disabled = false;
+    if (!isOpenBoard(session)) return;
+    showBoardStatus(error.message);
+    setBoardReady(canApply);
+    byId('scene-file').disabled = false;
   }
-});
+}
 
-$('apply-board').addEventListener('click', async () => {
-  const active = board;
-  const step = boardStep;
-  boardReady(false);
+async function applyBoard() {
+  const session = boardSession;
+  if (!session?.editor) return;
+  setBoardReady(false);
   try {
-    const { scene, svg } = await active.exportBoard();
-    const [source, src] = await Promise.all([addAsset(scene, 'diagrams', 'excalidraw'), addAsset(svg, 'diagrams', 'svg')]);
-    if (board !== active || !dialog.open) return;
+    const { scene, svg } = await session.editor.exportBoard();
+    const [source, src] = await Promise.all([
+      addAsset(scene, 'diagrams', 'excalidraw'),
+      addAsset(svg, 'diagrams', 'svg'),
+    ]);
+    if (!isOpenBoard(session)) return;
     dialog.close();
-    replaceDiagram(step, { type: 'excalidraw', source, src });
-    render('[data-field="diagram:alt"]');
+    replaceDiagram(session.step, { type: 'excalidraw', source, src });
+    renderEditor('[data-field="diagram:alt"]');
   } catch (error) {
-    if (board !== active) return;
-    boardStatus(error.message);
-    boardReady(true);
+    if (!isOpenBoard(session)) return;
+    showBoardStatus(error.message);
+    setBoardReady(true);
   }
-});
+}
 
-$('close-board').addEventListener('click', () => dialog.close());
+async function openCourse() {
+  try {
+    setDraft(await readApiResponse(await fetch('/api/course')));
+    const firstLessonId = draft.manifest.chapters[0]?.lessons[0];
+    if (firstLessonId) selection = { chapterIndex: 0, lessonId: firstLessonId, stepIndex: 0 };
+    renderEditor();
+    setEditorBusy(false);
+  } catch (error) {
+    byId('save-state').textContent = 'Could not open course';
+    showError(error.message);
+  }
+}
+
+studio.addEventListener('click', handleEditorClick);
+studio.addEventListener('input', handleFieldInput);
+studio.addEventListener('change', handleAttachment);
+byId('save').addEventListener('click', saveCourse);
+byId('scene-file').addEventListener('change', importBoardScene);
+byId('apply-board').addEventListener('click', applyBoard);
+byId('close-board').addEventListener('click', () => dialog.close());
 dialog.addEventListener('close', () => {
-  board?.close();
-  board = undefined;
-  boardStep = undefined;
+  // The close event can arrive after the user opens another board.
+  if (!dialog.open) clearBoardSession();
+});
+window.addEventListener('beforeunload', event => {
+  if (dirty) event.preventDefault();
 });
 
-function confirmLeave(event) {
-  if (dirty) event.preventDefault();
-}
-window.addEventListener('beforeunload', confirmLeave);
-
-try {
-  setDraft(await result(await fetch('/api/course')));
-  const first = draft.manifest.chapters[0]?.lessons[0];
-  if (first) locationInCourse = { chapter: 0, lesson: first, step: 0 };
-  render();
-  studio.inert = false;
-  $('save').disabled = false;
-} catch (error) {
-  $('save-state').textContent = 'Could not open course';
-  report(error.message);
-}
+await openCourse();
