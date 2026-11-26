@@ -57,9 +57,10 @@ jobs:
           node-version: ${{ inputs.node-version }}
           package-manager-cache: false
       - name: Install capture tools
-        working-directory: capture-tools
+        working-directory: capture-tools/tools/screenshots
         run: |
           npm ci
+          npm test
           npx playwright install --with-deps --only-shell chromium
       - name: Build site
         working-directory: site
@@ -88,7 +89,7 @@ jobs:
             echo 'The server did not become ready.' >&2
             exit 1
           fi
-          node ../capture-tools/scripts/capture-screenshots.js "$CONFIG" "$BASE_URL" "$RUNNER_TEMP/screenshots"
+          node ../capture-tools/tools/screenshots/capture.js "$CONFIG" "$BASE_URL" "$RUNNER_TEMP/screenshots"
       - uses: actions/upload-artifact@v4
         with:
           name: ${{ inputs.artifact-name }}

@@ -24,7 +24,7 @@ Save a configuration in the calling repository, for example `screenshots.json`:
 }
 ```
 
-`name` is a unique filename without an extension. `path` is relative to the base URL and can include a fragment. `waitFor` waits for a visible CSS selector after navigation. Steps run in order: `click`, `fill` (with a `value`), `press` (with a `key`), or `waitFor`. Selectors use Playwright selector syntax. The default viewport is 1440 by 900 pixels. `fullPage` defaults to `false`. See the [schema](../schemas/screenshots.json) for the complete contract. Use visible elements as readiness markers; a page load alone does not guarantee that application rendering is complete.
+`name` is a unique filename without an extension. `path` is relative to the base URL and can include a fragment. `waitFor` waits for a visible CSS selector after navigation. Steps run in order: `click`, `fill` (with a `value`), `press` (with a `key`), or `waitFor`. Selectors use Playwright selector syntax. The default viewport is 1440 by 900 pixels. `fullPage` defaults to `false`. See the [schema](../tools/screenshots/schema.json) for the complete contract. Use visible elements as readiness markers; a page load alone does not guarantee that application rendering is complete.
 
 ## Call the workflow
 
@@ -52,11 +52,12 @@ The called workflow checks out its capture scripts separately. Set `tools-ref` t
 
 ## Run locally
 
-From this repository, install dependencies and Chromium, start the site, then capture:
+From this repository, install the site and screenshot dependencies, install Chromium, start the site, then capture:
 
 ```sh
 npm ci
-npx playwright install --only-shell chromium
+npm ci --prefix tools/screenshots
+npm --prefix tools/screenshots exec -- playwright install --only-shell chromium
 npm run build
 npm run run
 ```
@@ -64,7 +65,9 @@ npm run run
 In a second terminal:
 
 ```sh
-node scripts/capture-screenshots.js example/screenshots.json http://127.0.0.1:4174 /tmp/course-board-screenshots
+node tools/screenshots/capture.js example/screenshots.json http://127.0.0.1:4174 /tmp/course-board-screenshots
 ```
 
 Stop the preview with Ctrl+C. The output directory is created if needed. Existing PNG files with the same names are replaced.
+
+The capture tools have a separate package and lockfile in `tools/screenshots/`. Their dependencies are installed only for screenshot work. Run `npm test --prefix tools/screenshots` to check the configuration contract.

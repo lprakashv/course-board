@@ -4,7 +4,7 @@ import { fileURLToPath } from 'node:url';
 import Ajv2020 from 'ajv/dist/2020.js';
 import { chromium } from 'playwright';
 
-const schema = JSON.parse(await readFile(new URL('../schemas/screenshots.json', import.meta.url), 'utf8'));
+const schema = JSON.parse(await readFile(new URL('./schema.json', import.meta.url), 'utf8'));
 const validate = new Ajv2020({ allErrors: true }).compile(schema);
 
 export function validateConfig(config) {
@@ -50,6 +50,6 @@ export async function capture(config, baseUrl, outputDirectory) {
 
 if (process.argv[1] && resolve(process.argv[1]) === fileURLToPath(import.meta.url)) {
   const [configPath, baseUrl, outputDirectory] = process.argv.slice(2);
-  if (!configPath || !baseUrl || !outputDirectory) throw new Error('Usage: node capture-screenshots.js <config.json> <base-url> <output-directory>');
+  if (!configPath || !baseUrl || !outputDirectory) throw new Error('Usage: node capture.js <config.json> <base-url> <output-directory>');
   await capture(JSON.parse(await readFile(configPath, 'utf8')), baseUrl, outputDirectory);
 }

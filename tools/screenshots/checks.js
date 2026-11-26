@@ -1,6 +1,6 @@
 import { test } from 'node:test';
 import assert from 'node:assert/strict';
-import { validateConfig } from '../scripts/capture-screenshots.js';
+import { validateConfig } from './capture.js';
 
 test('accepts page definitions with navigation steps', () => {
   const config = { pages: [{ name: 'lesson', path: '/#lesson', viewport: { width: 800, height: 600 }, steps: [
