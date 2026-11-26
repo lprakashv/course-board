@@ -123,10 +123,8 @@ A new course can use the full site builder. An existing interface can use the de
 | [`src/author/`](src/author/) | CLI import and local Course Board Studio |
 | [`src/browser/`](src/browser/) | Static site and standalone diagram renderer |
 | [`example/`](example/) | Sample course and CLI import bundle |
-| [`tools/screenshots/`](tools/screenshots/) | Isolated screenshot capture tools and dependencies |
 | [`test/`](test/) | Compiler, build, preview, Studio save, renderer, and navigation tests |
 | [`.github/workflows/ci.yml`](.github/workflows/ci.yml) | Build checks and tagged GitHub Releases |
-| [`.github/workflows/screenshots.yml`](.github/workflows/screenshots.yml) | Capture configured pages in CI; reusable by other repositories |
 | [`.github/workflows/showcase.yml`](.github/workflows/showcase.yml) | Build the showcase courses and refresh their screenshots |
 | [`AGENTS.md`](AGENTS.md) | Contributor and coding agent guidance |
 
