@@ -1,4 +1,5 @@
 {
+  "publish": { "directory": "docs/screenshots", "file": "README.md", "marker": "course-screenshots" },
   "pages": [
     {
       "name": "example-home",

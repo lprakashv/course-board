@@ -20,7 +20,7 @@ Check the file list from the dry run. Expect source modules, schemas, example so
 
 ## 2. Publish a GitHub Release
 
-The [CI and release workflow](../.github/workflows/ci.yml) checks pull requests and pushes to `main` on Node.js 20.19 and 22. After both checks and screenshot capture pass on a push to `main`, it reads the stable version from `package.json`. If that version has no tag, the workflow creates the matching tag and GitHub Release for the tested commit. Existing tags are left in place.
+The [CI and release workflow](../.github/workflows/ci.yml) checks pull requests and pushes to `main` on Node.js 20.19 and 22. After both checks pass on a push to `main`, it reads the stable version from `package.json`. If that version has no tag, the workflow creates the matching tag and GitHub Release for the tested commit. Existing tags are left in place.
 
 1. Choose a new version with no existing tag. Update `package.json`, `package-lock.json`, and the versioned examples in the guides. Run the [local checks](#1-test-the-package-locally).
 2. Merge the version change into `main` through a pull request. The workflow creates the tag and release after the checks pass.
@@ -34,7 +34,7 @@ In GitHub settings, protect `main` with a branch ruleset or branch protection ru
 
 ### Capture CI screenshots
 
-The CI workflow captures the example course on each pull request and push. Download the `screenshots` artifact from the workflow run. Other repositories can call the same workflow with their own pages and navigation steps. See the [screenshot guide](screenshots.md).
+The CI workflow captures the example course on each pull request and push. Download the `screenshots` artifact from the workflow run. On a push to `main`, the workflow also proposes updated images and README links in a pull request. Merge that pull request to publish the updates. Other repositories can call the same workflow with their own pages and navigation steps. See the [screenshot guide](screenshots.md).
 
 ### Refresh showcase images
 

@@ -3,6 +3,18 @@ name: Capture screenshots
 on:
   workflow_call:
     inputs:
+      publish:
+        description: Open a pull request with updated screenshots
+        default: false
+        type: boolean
+      publish-base:
+        description: Branch to update through a pull request
+        default: main
+        type: string
+      publish-branch:
+        description: Dedicated branch for screenshot updates
+        default: screenshot-updates
+        type: string
       config:
         description: JSON configuration path in the caller repository
         required: true
@@ -41,11 +53,15 @@ jobs:
   capture:
     runs-on: ubuntu-24.04
     timeout-minutes: 20
+    permissions:
+      contents: write
+      pull-requests: write
     steps:
       - uses: actions/checkout@v6
         with:
           path: site
-          persist-credentials: false
+          fetch-depth: 0
+          persist-credentials: ${{ inputs.publish }}
       - uses: actions/checkout@v6
         with:
           repository: lprakashv/course-board
@@ -95,3 +111,43 @@ jobs:
           name: ${{ inputs.artifact-name }}
           path: ${{ runner.temp }}/screenshots/*.png
           if-no-files-found: error
+      - name: Propose screenshot updates
+        if: inputs.publish && github.event_name == 'push' && github.ref == format('refs/heads/{0}', inputs.publish-base)
+        working-directory: site
+        shell: bash
+        env:
+          GH_TOKEN: ${{ github.token }}
+          BASE: ${{ inputs.publish-base }}
+          BRANCH: ${{ inputs.publish-branch }}
+          CONFIG: ${{ inputs.config }}
+          CAPTURE_COMMIT: ${{ github.sha }}
+        run: |
+          git check-ref-format --branch "$BASE" > /dev/null
+          git check-ref-format --branch "$BRANCH" > /dev/null
+          if [ "$BASE" = "$BRANCH" ]; then echo 'The update branch must differ from the base branch.' >&2; exit 1; fi
+          git config user.name 'github-actions[bot]'
+          git config user.email '41898282+github-actions[bot]@users.noreply.github.com'
+          git fetch origin "$BASE"
+          if [ "$(git rev-parse FETCH_HEAD)" != "$CAPTURE_COMMIT" ]; then
+            echo 'The base branch moved after capture. Run the workflow again.' >&2
+            exit 1
+          fi
+          if git ls-remote --exit-code --heads origin "$BRANCH" > /dev/null; then
+            git fetch origin "$BRANCH"
+            git switch -c "$BRANCH" FETCH_HEAD
+            git merge --no-edit "$CAPTURE_COMMIT"
+          else
+            git switch -c "$BRANCH" "$CAPTURE_COMMIT"
+          fi
+          node ../capture-tools/tools/screenshots/publish.js "$CONFIG" "$PWD" "$RUNNER_TEMP/screenshots" "$RUNNER_TEMP/screenshot-files"
+          while IFS= read -r -d '' file; do git add -- "$file"; done < "$RUNNER_TEMP/screenshot-files"
+          if ! git diff --cached --quiet; then git commit -m 'Update screenshots'; fi
+          if git diff --quiet "$CAPTURE_COMMIT" HEAD; then
+            echo 'The screenshots are already current.'
+            exit 0
+          fi
+          git push origin "HEAD:refs/heads/$BRANCH"
+          existing=$(gh pr list --base "$BASE" --head "$BRANCH" --state open --json number --jq '.[0].number // empty')
+          if [ -z "$existing" ]; then
+            gh pr create --base "$BASE" --head "$BRANCH" --title 'Update screenshots' --body 'Update the configured screenshots and Markdown section from the latest site build.'
+          fi

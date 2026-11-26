@@ -12,6 +12,9 @@ The example course shows lessons, step navigation, and a whiteboard. Select the 
 
 [![Course Board example](docs/course-board.png)](https://raw.githubusercontent.com/lprakashv/course-board/showcase-images/course-board.png)
 
+<!-- course-screenshots:start -->
+<!-- course-screenshots:end -->
+
 ## Courses built with Course Board
 
 These courses use the shared learner shell with their own lessons and diagrams. CI builds both source repositories and refreshes their screenshots after a successful push to `main`. The screenshots appear after the first successful showcase run.
