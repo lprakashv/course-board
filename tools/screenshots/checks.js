@@ -47,3 +47,25 @@ test('publishes images and updates only the marked section', async () => {
     await rm(root, { recursive: true, force: true });
   }
 });
+
+test('resolves page paths within a deployment base path', async () => {
+  const { pageUrl } = await import('./capture.js');
+  assert.equal(pageUrl('https://example.com/course/', '/lesson#step').href, 'https://example.com/course/lesson#step');
+  assert.equal(pageUrl('https://example.com/course', '/').href, 'https://example.com/course/');
+  assert.throws(() => pageUrl('https://example.com/?query=1', '/'), /base URL/);
+  assert.throws(() => pageUrl('https://example.com/', '/\\\\other.example/'), /origin/);
+});
+
+test('rejects invalid capture modes and commands', async () => {
+  const { spawnSync } = await import('node:child_process');
+  const script = new URL('./run.sh', import.meta.url).pathname;
+  for (const [source, build, start, message] of [
+    ['other', '', '', /source must be/],
+    ['repository', '', '', /start-command is required/],
+    ['public', 'npm run build', '', /Omit build-command/]
+  ]) {
+    const result = spawnSync('bash', [script], { encoding: 'utf8', env: { ...process.env, SOURCE: source, BUILD_COMMAND: build, START_COMMAND: start, READY_TIMEOUT: '30' } });
+    assert.notEqual(result.status, 0);
+    assert.match(result.stderr, message);
+  }
+});

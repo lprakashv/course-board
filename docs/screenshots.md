@@ -1,6 +1,6 @@
 # Capture screenshots in CI
 
-The screenshot workflow builds a site, starts its server, and uploads PNG files as a GitHub Actions artifact. It uses Chromium and a JSON configuration. Each page starts in a fresh browser context, so its steps do not share cookies or local storage with other pages.
+The screenshot workflow captures either a site built from the calling repository or a public website, and uploads PNG files as a GitHub Actions artifact. It uses Chromium and a JSON configuration. Each page starts in a fresh browser context, so its steps do not share cookies or local storage with other pages.
 
 ## Define pages
 
@@ -25,7 +25,7 @@ Save a configuration in the calling repository, for example `screenshots.json`:
 }
 ```
 
-`name` is a unique filename without an extension. `path` is relative to the base URL and can include a fragment. `waitFor` waits for a visible CSS selector after navigation. Steps run in order: `click`, `fill` (with a `value`), `press` (with a `key`), or `waitFor`. Selectors use Playwright selector syntax. The default viewport is 1440 by 900 pixels. `fullPage` defaults to `false`. See the [schema](../tools/screenshots/schema.json) for the complete contract. Use visible elements as readiness markers; a page load alone does not guarantee that application rendering is complete.
+`name` is a unique filename without an extension. `path` starts with `/` and is relative to the base URL, including its directory path. It can include a fragment. For example, base URL `https://example.com/course/` and path `/lesson` open `https://example.com/course/lesson`. `waitFor` waits for a visible CSS selector after navigation. Steps run in order: `click`, `fill` (with a `value`), `press` (with a `key`), or `waitFor`. Selectors use Playwright selector syntax. The default viewport is 1440 by 900 pixels. `fullPage` defaults to `false`. See the [schema](../tools/screenshots/schema.json) for the complete contract. Use visible elements as readiness markers; a page load alone does not guarantee that application rendering is complete.
 
 ## Select where images are published
 
@@ -57,6 +57,7 @@ jobs:
       pull-requests: write
     with:
       publish: ${{ github.event_name == 'push' && github.ref == 'refs/heads/main' }}
+      source: repository
       config: screenshots.json
       build-command: npm ci && npm run build
       start-command: npm run preview -- --host 127.0.0.1 --port 4174
@@ -64,7 +65,18 @@ jobs:
       tools-ref: main
 ```
 
-The workflow checks out the calling repository, runs the commands in its root, and waits for the base URL. It then captures the configured pages and uploads the `screenshots` artifact. `build-command` can be empty. `artifact-name`, `node-version`, and `ready-timeout` are optional inputs. Publishing is off by default. Commands are trusted shell code supplied by the caller. Use a server that stays in the foreground. The workflow stops it after capture.
+For `source: repository` (the default), the workflow checks out the calling repository, runs the build and start commands in its root, and waits for the base URL. `build-command` can be empty; `start-command` is required and must keep the server in the foreground. The workflow stops it after capture. Commands are trusted shell code supplied by the caller.
+
+To capture an already deployed public site, set these inputs instead:
+
+```yaml
+      source: public
+      base-url: https://example.com/course/
+```
+
+Keep the `config`, `tools-ref`, and optional publishing inputs from the first example. Omit `build-command` and `start-command` for a public site. The runner must be able to reach the site; capture does not wait for a deployment to finish. A public site can therefore show a different revision from the calling commit. Use `repository` to capture the current checkout before deployment.
+
+Both sources upload the `screenshots` artifact and support the same page definitions and optional publishing. `artifact-name`, `node-version`, and `ready-timeout` are optional inputs. Publishing is off by default.
 
 The called workflow checks out its capture scripts separately. Set `tools-ref` to the same commit SHA as the workflow reference when pinning a version; the default is `main`. The caller must allow this public repository in its Actions settings. [GitHub reusable workflow documentation](https://docs.github.com/en/actions/how-tos/reuse-automations/reuse-workflows)
 

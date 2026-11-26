@@ -14,16 +14,25 @@ export function validateConfig(config) {
   return config;
 }
 
+export function pageUrl(baseUrl, path) {
+  const base = new URL(baseUrl);
+  if (!['http:', 'https:'].includes(base.protocol) || base.search || base.hash) {
+    throw new Error('The base URL must use HTTP or HTTPS and cannot contain a query or fragment.');
+  }
+  if (!base.pathname.endsWith('/')) base.pathname += '/';
+  const url = new URL(path.slice(1), base);
+  if (url.origin !== base.origin) throw new Error('Page paths must use the base URL origin.');
+  return url;
+}
+
 export async function capture(config, baseUrl, outputDirectory) {
   validateConfig(config);
-  const base = new URL(baseUrl);
-  if (!['http:', 'https:'].includes(base.protocol)) throw new Error('The base URL must use HTTP or HTTPS.');
+  pageUrl(baseUrl, '/');
   await mkdir(outputDirectory, { recursive: true });
   const browser = await chromium.launch({ headless: true });
   try {
     for (const definition of config.pages) {
-      const url = new URL(definition.path, base);
-      if (url.origin !== base.origin) throw new Error(`Page ${definition.name} must use the base URL origin.`);
+      const url = pageUrl(baseUrl, definition.path);
       const context = await browser.newContext({ viewport: definition.viewport ?? { width: 1440, height: 900 }, reducedMotion: 'reduce' });
       try {
         const page = await context.newPage();

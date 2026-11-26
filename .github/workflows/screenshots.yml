@@ -15,6 +15,10 @@ on:
         description: Dedicated branch for screenshot updates
         default: screenshot-updates
         type: string
+      source:
+        description: repository to build and serve the checkout, or public for a deployed site
+        default: repository
+        type: string
       config:
         description: JSON configuration path in the caller repository
         required: true
@@ -25,7 +29,7 @@ on:
         type: string
       start-command:
         description: Foreground command to serve the site
-        required: true
+        default: ''
         type: string
       base-url:
         description: URL used to check readiness and resolve page paths
@@ -78,34 +82,17 @@ jobs:
           npm ci
           npm test
           npx playwright install --with-deps --only-shell chromium
-      - name: Build site
-        working-directory: site
-        env:
-          BUILD_COMMAND: ${{ inputs.build-command }}
-        run: bash -e -o pipefail -c "$BUILD_COMMAND"
-      - name: Start site and capture screenshots
+      - name: Capture screenshots
         working-directory: site
         shell: bash
         env:
+          SOURCE: ${{ inputs.source }}
+          BUILD_COMMAND: ${{ inputs.build-command }}
           START_COMMAND: ${{ inputs.start-command }}
           BASE_URL: ${{ inputs.base-url }}
           CONFIG: ${{ inputs.config }}
           READY_TIMEOUT: ${{ inputs.ready-timeout }}
-        run: |
-          bash -e -o pipefail -c "$START_COMMAND" > "$RUNNER_TEMP/screenshot-server.log" 2>&1 &
-          server_pid=$!
-          trap 'kill "$server_pid" 2>/dev/null || true' EXIT
-          for ((attempt=0; attempt<READY_TIMEOUT; attempt++)); do
-            if curl --fail --silent --output /dev/null "$BASE_URL"; then break; fi
-            if ! kill -0 "$server_pid" 2>/dev/null; then cat "$RUNNER_TEMP/screenshot-server.log"; exit 1; fi
-            sleep 1
-          done
-          if ! curl --fail --silent --output /dev/null "$BASE_URL"; then
-            cat "$RUNNER_TEMP/screenshot-server.log"
-            echo 'The server did not become ready.' >&2
-            exit 1
-          fi
-          node ../capture-tools/tools/screenshots/capture.js "$CONFIG" "$BASE_URL" "$RUNNER_TEMP/screenshots"
+        run: bash ../capture-tools/tools/screenshots/run.sh
       - uses: actions/upload-artifact@v4
         with:
           name: ${{ inputs.artifact-name }}

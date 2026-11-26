@@ -37,6 +37,7 @@ jobs:
     uses: ./.github/workflows/screenshots.yml
     with:
       publish: ${{ github.event_name == 'push' && github.ref == 'refs/heads/main' }}
+      source: repository
       config: example/screenshots.json
       build-command: npm ci && npm run build
       start-command: npm run run
