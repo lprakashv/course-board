@@ -1,0 +1,32 @@
+README.md
+  s_1e04512fa3284d::t_a06a1b58619fd5 100
+tools/screenshots/checks.js
+  s_1e04512fa3284d::t_7378559328e78d 50-57
+  s_1e04512fa3284d::t_6809f1e87dc2e3 58-71
+docs/screenshots.md
+  s_1e04512fa3284d::t_a06a1b58619fd5 3,28,60,68-79
+.github/workflows/screenshots.yml
+  s_1e04512fa3284d::t_7378559328e78d 18-21,32,85,89-90,95
+tools/screenshots/capture.js
+  s_1e04512fa3284d::t_7378559328e78d 17-27,30,35
+.github/workflows/ci.yml
+  s_1e04512fa3284d::t_a06a1b58619fd5 40
+tools/screenshots/run.sh
+  s_1e04512fa3284d::t_7378559328e78d 1-29
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.7.5",
+  "base_commit_sha": "b314296b376de3fe1f90688f6d08be1418ceedd3",
+  "prompts": {},
+  "sessions": {
+    "s_1e04512fa3284d": {
+      "agent_id": {
+        "tool": "codex",
+        "id": "01a21754-eba4-7960-a5ec-7b312e3bf09c",
+        "model": "gpt-6.1-terra"
+      },
+      "human_author": "Lalit Vatsal <lprakashv@gmail.com>"
+    }
+  }
+}
