@@ -30,9 +30,18 @@ jobs:
       - run: npm run build
       - run: npm pack --dry-run
 
+  screenshots:
+    uses: ./.github/workflows/screenshots.yml
+    with:
+      config: example/screenshots.json
+      build-command: npm ci && npm run build
+      start-command: npm run run
+      base-url: http://127.0.0.1:4174
+      tools-ref: ${{ github.sha }}
+
   release:
     if: github.event_name == 'push' && github.ref == 'refs/heads/main'
-    needs: check
+    needs: [check, screenshots]
     runs-on: ubuntu-latest
     permissions:
       contents: write

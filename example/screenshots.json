@@ -1,0 +1,18 @@
+{
+  "pages": [
+    {
+      "name": "example-home",
+      "path": "/",
+      "waitFor": "#home h1"
+    },
+    {
+      "name": "example-lesson",
+      "path": "/",
+      "waitFor": "#home h1",
+      "steps": [
+        { "action": "click", "selector": "#home a" },
+        { "action": "waitFor", "selector": "#lesson-title" }
+      ]
+    }
+  ]
+}

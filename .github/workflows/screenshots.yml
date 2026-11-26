@@ -1,0 +1,96 @@
+name: Capture screenshots
+
+on:
+  workflow_call:
+    inputs:
+      config:
+        description: JSON configuration path in the caller repository
+        required: true
+        type: string
+      build-command:
+        description: Command to install dependencies and build the site
+        default: ''
+        type: string
+      start-command:
+        description: Foreground command to serve the site
+        required: true
+        type: string
+      base-url:
+        description: URL used to check readiness and resolve page paths
+        required: true
+        type: string
+      tools-ref:
+        description: Course Board ref containing the capture scripts
+        default: main
+        type: string
+      node-version:
+        default: '22'
+        type: string
+      artifact-name:
+        default: screenshots
+        type: string
+      ready-timeout:
+        description: Maximum seconds to wait for the server
+        default: 60
+        type: number
+
+permissions:
+  contents: read
+
+jobs:
+  capture:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 20
+    steps:
+      - uses: actions/checkout@v6
+        with:
+          path: site
+          persist-credentials: false
+      - uses: actions/checkout@v6
+        with:
+          repository: lprakashv/course-board
+          ref: ${{ inputs.tools-ref }}
+          path: capture-tools
+          persist-credentials: false
+      - uses: actions/setup-node@v6
+        with:
+          node-version: ${{ inputs.node-version }}
+          package-manager-cache: false
+      - name: Install capture tools
+        working-directory: capture-tools
+        run: |
+          npm ci
+          npx playwright install --with-deps --only-shell chromium
+      - name: Build site
+        working-directory: site
+        env:
+          BUILD_COMMAND: ${{ inputs.build-command }}
+        run: bash -e -o pipefail -c "$BUILD_COMMAND"
+      - name: Start site and capture screenshots
+        working-directory: site
+        shell: bash
+        env:
+          START_COMMAND: ${{ inputs.start-command }}
+          BASE_URL: ${{ inputs.base-url }}
+          CONFIG: ${{ inputs.config }}
+          READY_TIMEOUT: ${{ inputs.ready-timeout }}
+        run: |
+          bash -e -o pipefail -c "$START_COMMAND" > "$RUNNER_TEMP/screenshot-server.log" 2>&1 &
+          server_pid=$!
+          trap 'kill "$server_pid" 2>/dev/null || true' EXIT
+          for ((attempt=0; attempt<READY_TIMEOUT; attempt++)); do
+            if curl --fail --silent --output /dev/null "$BASE_URL"; then break; fi
+            if ! kill -0 "$server_pid" 2>/dev/null; then cat "$RUNNER_TEMP/screenshot-server.log"; exit 1; fi
+            sleep 1
+          done
+          if ! curl --fail --silent --output /dev/null "$BASE_URL"; then
+            cat "$RUNNER_TEMP/screenshot-server.log"
+            echo 'The server did not become ready.' >&2
+            exit 1
+          fi
+          node ../capture-tools/scripts/capture-screenshots.js "$CONFIG" "$BASE_URL" "$RUNNER_TEMP/screenshots"
+      - uses: actions/upload-artifact@v4
+        with:
+          name: ${{ inputs.artifact-name }}
+          path: ${{ runner.temp }}/screenshots/*.png
+          if-no-files-found: error
