@@ -12,6 +12,9 @@ The example course shows lessons, step navigation, and a whiteboard. Select the 
 
 [![Course Board example](docs/course-board.png)](https://raw.githubusercontent.com/lprakashv/course-board/showcase-images/course-board.png)
 
+<!-- course-screenshots:start -->
+<!-- course-screenshots:end -->
+
 ## Courses built with Course Board
 
 These courses use the shared learner shell with their own lessons and diagrams. CI builds both source repositories and refreshes their screenshots after a successful push to `main`. The screenshots appear after the first successful showcase run.
@@ -94,6 +97,7 @@ Open the production preview at [127.0.0.1:4174](http://127.0.0.1:4174/). The bui
 | Develop | Course source on disk | `npm run dev` rebuilds the example when you reload the page. |
 | Build and preview | Valid course source | `npm run build` replaces `example/dist/`. `npm run run` serves that build. A failed build keeps the previous output. |
 | Publish a site | The course's `dist/` directory | A static site. [GitHub Pages and local checks](docs/publishing.md#4-deploy-a-course-to-github-pages) |
+| Capture screenshots | A site URL or repository build, and JSON page definitions | PNG artifacts in CI. [Screenshot guide](docs/screenshots.md) |
 | Release Course Board | A new package version merged to `main` | CI tests the commit and creates the matching tag and package archive. [Package release](docs/publishing.md#2-publish-a-github-release) |
 
 ## Guides

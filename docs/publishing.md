@@ -32,6 +32,10 @@ This workflow publishes the archive to [GitHub Releases](https://github.com/lpra
 
 In GitHub settings, protect `main` with a branch ruleset or branch protection rule. Require pull requests and both `check (20.19.0)` and `check (22)` from the CI workflow. Block force pushes and deletion. Apply the rule to administrators where available. Require review when another reviewer is available. Give the release and screenshot publishing jobs permission to write repository contents. [GitHub branch protection](https://docs.github.com/en/repositories/configuring-branches-and-merges-in-your-repository/managing-protected-branches/about-protected-branches)
 
+### Capture CI screenshots
+
+The CI workflow captures the example course on each pull request and push. Download the `screenshots` artifact from the workflow run. On a push to `main`, the workflow also proposes updated images and README links in a pull request. Merge that pull request to publish the updates. Other repositories can call the same workflow with their own pages and navigation steps. See the [screenshot guide](screenshots.md).
+
 ### Refresh showcase images
 
 The [showcase workflow](../.github/workflows/showcase.yml) runs after CI passes on a push to `main`. You can also run it manually from **Actions**. It builds the example and the latest `main` of each public course, then writes three screenshots to `showcase-images`. If a course build fails, the previous images stay available. GitHub can cache older images. Use the CI workflow for pull request checks.

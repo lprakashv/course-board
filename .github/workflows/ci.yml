@@ -30,6 +30,29 @@ jobs:
       - run: npm run build
       - run: npm pack --dry-run
 
+  screenshots:
+    runs-on: ubuntu-24.04
+    permissions:
+      contents: write
+      pull-requests: write
+    steps:
+      - uses: actions/checkout@v6
+        with:
+          fetch-depth: 0
+          persist-credentials: ${{ github.event_name == 'push' && github.ref == 'refs/heads/main' }}
+      - uses: actions/setup-node@v6
+        with:
+          node-version: '22'
+          package-manager-cache: false
+      - uses: lprakashv/capture-and-update-screenshot-action@7427188b6422a213e031886a059ede1b1d9f6f2f
+        with:
+          publish: ${{ github.event_name == 'push' && github.ref == 'refs/heads/main' }}
+          source: repository
+          config: example/screenshots.json
+          build-command: npm ci && npm run build
+          start-command: npm run run
+          base-url: http://127.0.0.1:4174
+
   release:
     if: github.event_name == 'push' && github.ref == 'refs/heads/main'
     needs: check
