@@ -1,0 +1,44 @@
+docs/screenshots.md
+  s_1e04512fa3284d::t_14bc9bcebbadb9 1-58,60-70
+  s_1e04512fa3284d::t_fe6f8ba3684b55 59
+schemas/screenshots.json
+  s_1e04512fa3284d::t_14bc9bcebbadb9 1-35
+scripts/capture-screenshots.js
+  s_1e04512fa3284d::t_c617849676a491 1-50,52-55
+  s_1e04512fa3284d::t_997eaeecdb0ee4 51
+README.md
+  s_1e04512fa3284d::t_c617849676a491 97,125
+example/screenshots.json
+  s_1e04512fa3284d::t_14bc9bcebbadb9 1-5,8,10,16-18
+  s_1e04512fa3284d::t_b043317238f855 6-7,9,11-15
+.github/workflows/screenshots.yml
+  s_1e04512fa3284d::t_fe6f8ba3684b55 63
+  s_1e04512fa3284d::t_c617849676a491 1-62,64-96
+.github/workflows/ci.yml
+  s_1e04512fa3284d::t_c617849676a491 33-41,44
+docs/publishing.md
+  s_1e04512fa3284d::t_c617849676a491 23,35-37
+  s_1e04512fa3284d::t_0b0d8a20d6a123 38
+package-lock.json
+  s_1e04512fa3284d::t_fefea3f8c47364 22,3241-3287
+package.json
+  s_1e04512fa3284d::t_ebf26c53cd8be0 51
+test/screenshots.test.js
+  s_1e04512fa3284d::t_0388f5b578d3f0 1-23
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.7.5",
+  "base_commit_sha": "933428d5305748e0b325ff384f4267b6207113d2",
+  "prompts": {},
+  "sessions": {
+    "s_1e04512fa3284d": {
+      "agent_id": {
+        "tool": "codex",
+        "id": "01a21754-eba4-7960-a5ec-7b312e3bf09c",
+        "model": "gpt-6.1-terra"
+      },
+      "human_author": "Lalit Vatsal <lprakashv@gmail.com>"
+    }
+  }
+}
