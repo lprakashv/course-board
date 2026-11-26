@@ -13,6 +13,9 @@ The example course shows lessons, step navigation, and a whiteboard. Select the 
 [![Course Board example](docs/course-board.png)](https://raw.githubusercontent.com/lprakashv/course-board/showcase-images/course-board.png)
 
 <!-- course-screenshots:start -->
+![example-home](docs/screenshots/example-home.png)
+
+![example-lesson](docs/screenshots/example-lesson.png)
 <!-- course-screenshots:end -->
 
 ## Courses built with Course Board
